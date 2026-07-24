@@ -1,0 +1,128 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Material {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  currentCost Float
+  marketCost  Float
+  supplier    String
+  orders      Order[]
+}
+
+model Order {
+  id         String   @id
+  client     String
+  margin     String
+  materialId Int
+  material   Material @relation(fields: [materialId], references: [id])
+}
+
+model Shipment {
+  id              Int            @id @default(autoincrement())
+  material        String
+  qty             String
+  supplier        String
+  currentNode     String
+  eta             String
+  status          String
+  gemmaAnnotation String
+  steps           ShipmentStep[]
+}
+
+model ShipmentStep {
+  id         Int      @id @default(autoincrement())
+  shipmentId Int
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  name       String
+  status     String
+  sequence   Int
+}
+
+model MarketSignal {
+  id        Int    @id @default(autoincrement())
+  title     String
+  source    String
+  date      String
+  relevance String
+  tag       String
+  desc      String
+  url       String
+}
+
+model PricingRecommendation {
+  id         String   @id
+  trigger    String
+  action     String
+  confidence String
+  reasoning  Json     // list of strings representing the reasoning trail
+  accepted   Boolean  @default(false)
+  rejected   Boolean  @default(false)
+  expanded   Boolean  @default(false)
+  sourceName String?
+  sourceDate String?
+  sourceUrl  String?
+}
+
+model StructuralRisk {
+  id            Int    @id @default(autoincrement())
+  trend         String
+  status        String
+  title         String
+  description   String
+  gemmaAdvisory String
+}
+
+model IndustryNews {
+  id       Int    @id @default(autoincrement())
+  title    String
+  source   String
+  date     String
+  summary  String
+  category String
+  image    String
+  url      String
+}
+
+model InventoryItem {
+  id           Int      @id @default(autoincrement())
+  name         String
+  category     String   // "Raw Material" | "Tooling" | "WIP" | "Finished"
+  sku          String   @unique
+  quantity     Int
+  unit         String   // "pcs" | "kg" | "meters"
+  location     String   // "Rack A-1", "Bin 3", etc.
+  minThreshold Int     // for reorder alerts
+  status       String   // "In Stock" | "Low Stock" | "Out of Stock"
+  image        String   // public path, e.g. "/inventory/aluminum-blocks.png"
+  lastUpdated  DateTime @default(now())
+}
+
+model OutreachLog {
+  id        Int      @id @default(autoincrement())
+  client    String
+  channel   String
+  tone      String
+  content   String
+  sentAt    DateTime @default(now())
+}
+
+model Supplier {
+  id                Int      @id @default(autoincrement())
+  name              String   @unique
+  materials         String
+  avgLeadTime       String
+  estimatedQuote    String
+  reliabilityRating String
+  contactChannel    String
+  sourceUrl         String
+}

@@ -1,0 +1,170 @@
+@import "tailwindcss";
+
+@layer base {
+  :root, :root[data-theme="bright"] {
+    --bg-app: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f1f5f9;
+    --bg-subtle: #f1f5f9;
+    --bg-muted: #e2e8f0;
+    --bg-elevated: #ffffff;
+    --bg-input: #ffffff;
+
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --text-inverse: #ffffff;
+
+    --border-subtle: #e2e8f0;
+    --border-hover: #cbd5e1;
+    --border-focus: #3b82f6;
+
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --primary-subtle: rgba(37, 99, 235, 0.08);
+
+    --accent-emerald: #059669;
+    --accent-amber: #d97706;
+    --accent-rose: #e11d48;
+    --accent-purple: #7c3aed;
+
+    --shadow-soft: 0 10px 25px -5px rgba(37, 99, 235, 0.08), 0 8px 10px -6px rgba(37, 99, 235, 0.05);
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+
+    /* Legacy variable compatibility mappings */
+    --background-custom: var(--bg-app);
+    --surface: var(--bg-card);
+    --text-foreground: var(--text-primary);
+    --slate-50: var(--bg-subtle);
+    --slate-100: var(--bg-muted);
+  }
+
+  :root[data-theme="dark"], .dark {
+    --bg-app: #0b0f17;
+    --bg-card: #131b2e;
+    --bg-card-hover: #1a243b;
+    --bg-subtle: #182238;
+    --bg-muted: #202c45;
+    --bg-elevated: #1e2a45;
+    --bg-input: #0f172a;
+
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --text-inverse: #0f172a;
+
+    --border-subtle: #1e293b;
+    --border-hover: #334155;
+    --border-focus: #60a5fa;
+
+    --primary: #3b82f6;
+    --primary-dark: #2563eb;
+    --primary-subtle: rgba(59, 130, 246, 0.15);
+
+    --accent-emerald: #10b981;
+    --accent-amber: #f59e0b;
+    --accent-rose: #f43f5e;
+    --accent-purple: #8b5cf6;
+
+    --shadow-soft: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+
+    /* Legacy variable compatibility mappings */
+    --background-custom: var(--bg-app);
+    --surface: var(--bg-card);
+    --text-foreground: var(--text-primary);
+    --slate-50: var(--bg-subtle);
+    --slate-100: var(--bg-muted);
+  }
+}
+
+/* Typography Utilities */
+.font-display {
+  font-family: var(--font-bricolage), system-ui, sans-serif;
+}
+
+.font-sans {
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+/* Smooth Transitions & Easing */
+.sidebar-transition {
+  transition: all 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.theme-transition {
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Semantic Theme Helper Utility Classes */
+.bg-app-theme {
+  background-color: var(--bg-app);
+}
+
+.bg-card-theme {
+  background-color: var(--bg-card);
+}
+
+.bg-card-hover-theme:hover {
+  background-color: var(--bg-card-hover);
+}
+
+.bg-subtle-theme {
+  background-color: var(--bg-subtle);
+}
+
+.bg-muted-theme {
+  background-color: var(--bg-muted);
+}
+
+.text-primary-theme {
+  color: var(--text-primary);
+}
+
+.text-secondary-theme {
+  color: var(--text-secondary);
+}
+
+.text-muted-theme {
+  color: var(--text-muted);
+}
+
+.border-subtle-theme {
+  border-color: var(--border-subtle);
+}
+
+.border-hover-theme:hover {
+  border-color: var(--border-hover);
+}
+
+/* Card glassmorphic and hover effects */
+.app-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.app-card-interactive {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.25s ease;
+}
+
+.app-card-interactive:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--border-hover);
+}

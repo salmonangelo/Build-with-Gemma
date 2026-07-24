@@ -1,0 +1,43 @@
+import type { Metadata } from "next";
+import { Inter, Bricolage_Grotesque } from "next/font/google";
+import "./globals.css";
+import { BusinessDataProvider } from "@/context/BusinessDataContext";
+import { ThemeProvider } from "@/context/ThemeContext";
+import { OnboardingProvider } from "@/context/OnboardingContext";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const bricolage = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-bricolage",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "Revenue Intelligence Agent (FinCent)",
+  description: "AI-Powered Financial Copilot for Manufacturing MSMEs",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en" className={`${inter.variable} ${bricolage.variable}`}>
+      <body className="antialiased font-sans text-[#0f172a] dark:text-[#f8fafc]">
+        <ThemeProvider>
+          <OnboardingProvider>
+            <BusinessDataProvider>
+              {children}
+            </BusinessDataProvider>
+          </OnboardingProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}

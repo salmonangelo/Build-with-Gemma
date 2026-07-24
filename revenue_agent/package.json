@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "predev": "npx tsx scripts/check-db.ts",
-    "dev": "next dev",
+    "dev": "npx tsx scripts/dev.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

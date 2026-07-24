@@ -41,11 +41,21 @@ function MaterialCostWatchlist() {
       const mats = await getMaterials();
       setMaterials(mats);
       
+      const trendsResults = await Promise.all(
+        mats.map(async (mat: any) => {
+          try {
+            const data = await fetchMaterialTrends(mat.name);
+            return { name: mat.name, data };
+          } catch {
+            return { name: mat.name, data: null };
+          }
+        })
+      );
+
       const trendsMap: Record<string, any> = {};
-      for (const mat of mats) {
-        const trendData = await fetchMaterialTrends(mat.name);
-        trendsMap[mat.name] = trendData;
-      }
+      trendsResults.forEach(res => {
+        if (res.data) trendsMap[res.name] = res.data;
+      });
       setTrends(trendsMap);
       setLoading(false);
     } catch (err: any) {

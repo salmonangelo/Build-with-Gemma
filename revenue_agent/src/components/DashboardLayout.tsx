@@ -110,49 +110,18 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, acti
             </div>
           )}
 
-          {/* Data Loading & Empty State Handling */}
-          {loading && !data ? (
-            <div className="h-[70vh] flex flex-col items-center justify-center gap-3">
-              <Loader2 size={32} className="text-[var(--primary)] animate-spin" />
-              <p className="text-xs font-bold text-[var(--text-muted)] font-display uppercase tracking-widest animate-pulse">Running Gemma reasoning orchestrator...</p>
-            </div>
-          ) : data ? (
-            <div className="animate-fade-in pb-12">
-              {tier === 'beginner' && (activeRoute === 'dashboard' || activeRoute === '/') ? (
-                <BeginnerHome 
-                  data={data} 
-                  onOpenChat={() => setIsChatOpen(true)} 
-                  onTriggerUpload={triggerFileUpload} 
-                />
-              ) : (
-                children
-              )}
-            </div>
-          ) : (
-            <div className="h-[65vh] flex flex-col items-center justify-center gap-6 border-2 border-dashed border-[var(--border-subtle)] rounded-3xl bg-[var(--bg-card)] p-6 md:p-10 animate-fade-in text-center shadow-xs">
-              <div className="p-4 bg-[var(--primary-subtle)] text-[var(--primary)] rounded-full">
-                <FileSpreadsheet size={40} />
-              </div>
-              <div className="max-w-sm space-y-2">
-                <h3 className="font-black text-[var(--text-primary)] text-base font-display">No Active Data Loaded</h3>
-                <p className="text-xs text-[var(--text-muted)] leading-relaxed">Upload a customer payment history CSV or load the pre-configured sample to populate the advisor platform.</p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                <button 
-                  onClick={loadSample}
-                  className="px-5 py-2.5 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] text-xs font-bold rounded-full transition-all cursor-pointer"
-                >
-                  Load Pre-Configured Sample
-                </button>
-                <button 
-                  onClick={triggerFileUpload}
-                  className="px-5 py-2.5 bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white text-xs font-bold rounded-full transition-all shadow-sm cursor-pointer"
-                >
-                  Upload Business History
-                </button>
-              </div>
-            </div>
-          )}
+          {/* Main Content Render */}
+          <div className="animate-fade-in pb-12">
+            {tier === 'beginner' && (activeRoute === 'dashboard' || activeRoute === '/') ? (
+              <BeginnerHome 
+                data={data} 
+                onOpenChat={() => setIsChatOpen(true)} 
+                onTriggerUpload={triggerFileUpload} 
+              />
+            ) : (
+              children
+            )}
+          </div>
         </main>
       </div>
 

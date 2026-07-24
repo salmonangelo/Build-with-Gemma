@@ -35,8 +35,17 @@ export async function POST() {
     const newsData = await fetchMarketNews();
     const businessContext = buildBusinessContext(mlData, newsData);
     
-    // Query Gemma reasoning layer
-    const gemmaAnalysis = await queryGemmaAnalysis(businessContext, null, mlData.shap_why_adjusted || null);
+    // Query Gemma reasoning layer with fast timeout fallback for instant initial page render
+    let gemmaAnalysis: any;
+    try {
+      gemmaAnalysis = await Promise.race([
+        queryGemmaAnalysis(businessContext, null, mlData.shap_why_adjusted || null),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for Gemma response")), 2500))
+      ]);
+    } catch (gemmaErr: any) {
+      console.warn("Fast load sample fallback active:", gemmaErr.message);
+      gemmaAnalysis = {};
+    }
     
     return NextResponse.json({
       success: true,

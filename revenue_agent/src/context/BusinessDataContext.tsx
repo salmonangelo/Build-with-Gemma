@@ -5,7 +5,8 @@ import {
   loadSampleData, 
   uploadDataset, 
   getSectionExplanation,
-  DashboardData 
+  DashboardData,
+  DEFAULT_DASHBOARD_DATA
 } from '../services/api';
 
 interface BusinessDataContextProps {
@@ -31,7 +32,7 @@ interface BusinessDataContextProps {
 const BusinessDataContext = createContext<BusinessDataContextProps | undefined>(undefined);
 
 export const BusinessDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [data, setData] = useState<DashboardData | null>(null);
+  const [data, setData] = useState<DashboardData | null>(DEFAULT_DASHBOARD_DATA);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma-client';
-import { ai, OPENROUTER_MODEL, isOpenRouterKeyValid } from '@/lib/ai';
+import { AIService } from '@/lib/ai';
 
 export const dynamic = "force-dynamic";
 
@@ -30,21 +30,12 @@ export async function POST(req: Request) {
 
     let items = [];
 
-    if (isOpenRouterKeyValid(process.env.OPENROUTER_API_KEY)) {
-      try {
-        const response = await ai.chat.completions.create({
-          model: OPENROUTER_MODEL,
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.4,
-          response_format: { type: "json_object" }
-        });
-
-        const responseText = response.choices[0]?.message?.content || '{}';
-        const parsed = JSON.parse(responseText);
-        items = parsed.items || [];
-      } catch (apiErr: any) {
-        console.warn("OpenRouter Gemma 3 invoice OCR parser failed, using fallback:", apiErr.message);
-      }
+    try {
+      const responseText = await AIService.generateCompletion(prompt, true);
+      const parsed = JSON.parse(responseText);
+      items = parsed.items || [];
+    } catch (apiErr: any) {
+      console.warn("Ollama Gemma 4 invoice OCR parser failed, using fallback:", apiErr.message);
     }
 
     if (items.length === 0) {

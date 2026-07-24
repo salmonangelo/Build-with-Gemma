@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { ai, OPENROUTER_MODEL, isOpenRouterKeyValid } from '@/lib/ai';
+import { AIService } from '@/lib/ai';
 
 export const dynamic = "force-dynamic";
 
@@ -36,23 +36,16 @@ export async function POST(req: Request) {
       Return the generated outreach copy in plain text. Do not wrap the output in markdown code blocks or add conversational explanations outside of the generated copy.
     `;
 
-    if (isOpenRouterKeyValid(process.env.OPENROUTER_API_KEY)) {
-      try {
-        const response = await ai.chat.completions.create({
-          model: OPENROUTER_MODEL,
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.4
+    try {
+      const text = await AIService.generateCompletion(prompt);
+      if (text) {
+        return NextResponse.json({ 
+          success: true, 
+          content: text 
         });
-        const text = response.choices[0]?.message?.content;
-        if (text) {
-          return NextResponse.json({ 
-            success: true, 
-            content: text 
-          });
-        }
-      } catch (apiErr: any) {
-        console.warn("OpenRouter Gemma 3 API call failed (using local reminder fallback):", apiErr.message);
       }
+    } catch (apiErr: any) {
+      console.warn("Ollama Gemma 4 API call failed (using local reminder fallback):", apiErr.message);
     }
 
     let fallbackText = "";

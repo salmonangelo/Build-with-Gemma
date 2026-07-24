@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { ai, OPENROUTER_MODEL, isOpenRouterKeyValid } from '@/lib/ai';
+import { AIService } from '@/lib/ai';
 import { 
   buildBusinessContext, 
   FALLBACK_NEWS 
@@ -114,21 +114,13 @@ ${sectionPrompt}
 Provide the response in clean Markdown with heading hierarchies, list bullets, and highlighted numbers.
 `;
 
-    if (isOpenRouterKeyValid(process.env.OPENROUTER_API_KEY)) {
-      try {
-        const response = await ai.chat.completions.create({
-          model: OPENROUTER_MODEL,
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.4
-        });
-
-        const explanationText = response.choices[0]?.message?.content;
-        if (explanationText) {
-          return NextResponse.json({ explanation: explanationText });
-        }
-      } catch (apiErr: any) {
-        console.warn("OpenRouter Gemma 3 explanation API call failed (falling back to offline reasoning):", apiErr.message);
+    try {
+      const explanationText = await AIService.generateCompletion(prompt);
+      if (explanationText) {
+        return NextResponse.json({ explanation: explanationText });
       }
+    } catch (apiErr: any) {
+      console.warn("Ollama Gemma 4 explanation API call failed (falling back to offline reasoning):", apiErr.message);
     }
 
     const explanationText = generateLocalExplanation(section, activeContext);

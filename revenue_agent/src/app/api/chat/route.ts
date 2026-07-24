@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { ai, OPENROUTER_MODEL, isOpenRouterKeyValid } from '@/lib/ai';
+import { AIService } from '@/lib/ai';
 import { buildBusinessContext, FALLBACK_NEWS } from '@/lib/revenue-orchestrator';
 
 export const dynamic = "force-dynamic";
@@ -87,30 +87,22 @@ export async function POST(req: Request) {
       ${question}
     `;
 
-    if (isOpenRouterKeyValid(process.env.OPENROUTER_API_KEY)) {
-      try {
-        const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
-        (history || []).forEach((h: any) => {
-          messages.push({
-            role: h.role === 'user' ? 'user' : 'assistant',
-            content: h.parts || h.content || ''
-          });
+    try {
+      const messages: Array<{ role: string; content: string }> = [];
+      (history || []).forEach((h: any) => {
+        messages.push({
+          role: h.role === 'user' ? 'user' : 'assistant',
+          content: h.parts || h.content || ''
         });
-        messages.push({ role: 'user', content: prompt });
+      });
+      messages.push({ role: 'user', content: prompt });
 
-        const response = await ai.chat.completions.create({
-          model: OPENROUTER_MODEL,
-          messages,
-          temperature: 0.4
-        });
-        
-        const responseText = response.choices[0]?.message?.content;
-        if (responseText) {
-          return NextResponse.json({ response: responseText });
-        }
-      } catch (apiErr: any) {
-        console.warn("OpenRouter Gemma 3 API call failed (falling back to offline reasoning):", apiErr.message);
+      const responseText = await AIService.generateChatCompletion(messages);
+      if (responseText) {
+        return NextResponse.json({ response: responseText });
       }
+    } catch (apiErr: any) {
+      console.warn("Ollama Gemma 4 API call failed (falling back to offline reasoning):", apiErr.message);
     }
 
     const localResponse = generateLocalMockResponse(question, activeContext);

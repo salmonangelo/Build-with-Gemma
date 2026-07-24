@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import Parser from 'rss-parser';
-import { ai, OPENROUTER_MODEL, isOpenRouterKeyValid } from './ai';
+import { AIService } from './ai';
 
 const rssParser = new Parser();
 
@@ -682,18 +682,7 @@ ${JSON.stringify({
 `;
 
   try {
-    if (!isOpenRouterKeyValid(process.env.OPENROUTER_API_KEY)) {
-      throw new Error("No valid OPENROUTER_API_KEY provided (offline mode fallback).");
-    }
-
-    const response = await ai.chat.completions.create({
-      model: OPENROUTER_MODEL,
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.4,
-      response_format: { type: "json_object" }
-    });
-
-    const text = response.choices[0]?.message?.content || '{}';
+    const text = await AIService.generateCompletion(prompt, true);
     return JSON.parse(text);
   } catch (error: any) {
     console.error("Gemma API Call failed. Creating mock reasoning fallback:", error.message);

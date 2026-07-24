@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { ai, OPENROUTER_MODEL, isOpenRouterKeyValid } from '@/lib/ai';
+import { AIService } from '@/lib/ai';
 
 export const dynamic = "force-dynamic";
 
@@ -28,23 +28,16 @@ export async function POST(req: Request) {
       Format the output cleanly in plain text with clear headings, ready to be copied and printed. Do not include markdown code block formatting or other conversational comments outside the letter content itself.
     `;
 
-    if (isOpenRouterKeyValid(process.env.OPENROUTER_API_KEY)) {
-      try {
-        const response = await ai.chat.completions.create({
-          model: OPENROUTER_MODEL,
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.4
+    try {
+      const text = await AIService.generateCompletion(prompt);
+      if (text) {
+        return NextResponse.json({ 
+          success: true, 
+          rfqLetter: text 
         });
-        const text = response.choices[0]?.message?.content;
-        if (text) {
-          return NextResponse.json({ 
-            success: true, 
-            rfqLetter: text 
-          });
-        }
-      } catch (apiErr: any) {
-        console.warn("OpenRouter Gemma 3 RFQ call failed (using local pre-compiled RFQ):", apiErr.message);
       }
+    } catch (apiErr: any) {
+      console.warn("Ollama Gemma 4 RFQ call failed (using local pre-compiled RFQ):", apiErr.message);
     }
 
     const fallbackRfq = `MEENAKSHI PRECISION COMPONENTS
@@ -79,7 +72,7 @@ Meenakshi Precision Components`;
 
     return NextResponse.json({ success: true, rfqLetter: fallbackRfq, fallback: true });
   } catch (error: any) {
-    console.error("OpenRouter RFQ generator error:", error);
+    console.error("Ollama RFQ generator error:", error);
     return NextResponse.json({ error: "Failed to generate RFQ letter: " + error.message }, { status: 500 });
   }
 }

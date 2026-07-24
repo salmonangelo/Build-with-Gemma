@@ -1,13 +1,8 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
+import { ai, OPENROUTER_MODEL, isOpenRouterKeyValid } from '@/lib/ai';
 import { buildBusinessContext, FALLBACK_NEWS } from '@/lib/revenue-orchestrator';
 
 export const dynamic = "force-dynamic";
-
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY
-});
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 function generateLocalMockResponse(question: string, context: any): string {
   const q = question.toLowerCase();
@@ -45,7 +40,6 @@ Based on the uploaded dataset, here is the current financial standing:
 **Recommendation**: Pass through a +3.4% surcharge on steel components to restore the net margin safety corridor.`;
   }
 
-  // General CFO Summary
   return `### 💡 **CFO AI Analysis Summary**
 
 Hello! I have analyzed the operational metrics for **${context.summary?.business_name || "Meenakshi Precision Components"}**:
@@ -66,7 +60,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No active business context found. Please upload dataset first." }, { status: 400 });
     }
     
-    // Convert context format if needed
     if (activeContext.customer_intelligence && !activeContext.customer_summary) {
       activeContext = buildBusinessContext(activeContext, FALLBACK_NEWS.map(n => ({
         title: n.title,
@@ -76,13 +69,6 @@ export async function POST(req: Request) {
         category: n.category
       })));
     }
-
-    const formattedHistory = (history || []).map((h: any) => {
-      return {
-        role: h.role === 'user' ? 'user' as const : 'model' as const,
-        parts: [{ text: h.parts }]
-      };
-    });
 
     const prompt = `
       You are the Revenue Intelligence Agent AI Analyst, a Staff AI Financial Copilot.
@@ -101,26 +87,34 @@ export async function POST(req: Request) {
       ${question}
     `;
 
-    const chatContents = [
-      ...formattedHistory,
-      {
-        role: 'user' as const,
-        parts: [{ text: prompt }]
-      }
-    ];
+    if (isOpenRouterKeyValid(process.env.OPENROUTER_API_KEY)) {
+      try {
+        const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
+        (history || []).forEach((h: any) => {
+          messages.push({
+            role: h.role === 'user' ? 'user' : 'assistant',
+            content: h.parts || h.content || ''
+          });
+        });
+        messages.push({ role: 'user', content: prompt });
 
-    try {
-      const response = await ai.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: chatContents
-      });
-      return NextResponse.json({ response: response.text });
-    } catch (apiErr: any) {
-      console.warn("Gemini API call failed (offline mode fallback):", apiErr.message);
-      // Fallback to local rule-based analyst model
-      const localResponse = generateLocalMockResponse(question, activeContext);
-      return NextResponse.json({ response: localResponse });
+        const response = await ai.chat.completions.create({
+          model: OPENROUTER_MODEL,
+          messages,
+          temperature: 0.4
+        });
+        
+        const responseText = response.choices[0]?.message?.content;
+        if (responseText) {
+          return NextResponse.json({ response: responseText });
+        }
+      } catch (apiErr: any) {
+        console.warn("OpenRouter Gemma 3 API call failed (falling back to offline reasoning):", apiErr.message);
+      }
     }
+
+    const localResponse = generateLocalMockResponse(question, activeContext);
+    return NextResponse.json({ response: localResponse });
   } catch (error: any) {
     console.error("Gemma chat failed:", error);
     return NextResponse.json({ error: "Failed to generate chat response: " + error.message }, { status: 500 });

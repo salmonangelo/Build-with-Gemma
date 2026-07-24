@@ -64,56 +64,25 @@ def generate_sample_data(output_path):
     # Average payment delays (days) - rises in last 12 weeks
     payment_delays = 8.0 + 0.01 * time_index + np.random.normal(0, 1.0, num_weeks)
     payment_delays[-12:] += 6.0 # general payment delay increase in the last quarter
-    
-    # Generate Customer specific data (representing top customers and Others)
-    # Target shares: ABC (26%), Shree Auto (16%), Precision Auto (12%), Vijay (9%), Sigma (7%), Others (30%)
-    abc_rev = revenue * 0.26 + np.random.normal(0, 0.1, num_weeks)
-    shree_rev = revenue * 0.16 + np.random.normal(0, 0.08, num_weeks)
-    precision_rev = revenue * 0.12 + np.random.normal(0, 0.05, num_weeks)
-    vijay_rev = revenue * 0.09 + np.random.normal(0, 0.04, num_weeks)
-    sigma_rev = revenue * 0.07 + np.random.normal(0, 0.03, num_weeks)
-    others_rev = revenue - (abc_rev + shree_rev + precision_rev + vijay_rev + sigma_rev)
-    
-    # Delay days for customers
-    # ABC Industries has payment delays rising in last 12 weeks (3 months)
-    abc_delay = np.random.normal(6.0, 1.5, num_weeks)
-    abc_delay[-12:] = abc_delay[-12:] + 12.0 # delay rises to ~18 days
-    
-    shree_delay = np.random.normal(5.0, 1.0, num_weeks)
-    precision_delay = np.random.normal(2.0, 0.5, num_weeks)
-    vijay_delay = np.random.normal(9.0, 1.5, num_weeks)
-    sigma_delay = np.random.normal(15.0, 2.0, num_weeks)
-    others_delay = np.random.normal(6.0, 1.0, num_weeks)
-    
-    # Invoice count weekly (usually 0 or 1, let's create counts for aggregation)
-    # ABC: late in 3 of the last 4 invoices
-    abc_inv_total = np.ones(num_weeks, dtype=int)
-    abc_inv_delayed = np.zeros(num_weeks, dtype=int)
-    # set delayed = 1 for some random weeks, and specifically in the last 4 weeks set 3 delayed
-    abc_inv_delayed[np.random.choice(num_weeks, int(num_weeks*0.25), replace=False)] = 1
-    abc_inv_delayed[-4:] = [1, 1, 0, 1] # 3 of the last 4 invoices delayed
-    
-    shree_inv_total = np.ones(num_weeks, dtype=int)
-    shree_inv_delayed = np.zeros(num_weeks, dtype=int)
-    shree_inv_delayed[np.random.choice(num_weeks, int(num_weeks*0.15), replace=False)] = 1
-    
-    precision_inv_total = np.ones(num_weeks, dtype=int)
-    precision_inv_delayed = np.zeros(num_weeks, dtype=int)
-    precision_inv_delayed[np.random.choice(num_weeks, int(num_weeks*0.05), replace=False)] = 1
-    
-    vijay_inv_total = np.ones(num_weeks, dtype=int)
-    vijay_inv_delayed = np.zeros(num_weeks, dtype=int)
-    vijay_inv_delayed[np.random.choice(num_weeks, int(num_weeks*0.20), replace=False)] = 1
-    
-    sigma_inv_total = np.ones(num_weeks, dtype=int)
-    sigma_inv_delayed = np.zeros(num_weeks, dtype=int)
-    sigma_inv_delayed[np.random.choice(num_weeks, int(num_weeks*0.50), replace=False)] = 1
-    
-    others_inv_total = np.ones(num_weeks, dtype=int) * 3
-    others_inv_delayed = np.random.binomial(3, 0.1, num_weeks)
-    
-    # Create DataFrame
-    df = pd.DataFrame({
+
+    # Larger list of realistic customers
+    # (key, name, revenue_share, delay_base, delay_noise, delayed_invoice_rate, is_abc_anomaly)
+    customers_config = [
+        ("ABC_Industries", "ABC Industries", 0.20, 6.0, 1.5, 0.25, True), # top customer with delay anomaly at end
+        ("Shree_Auto", "Shree Auto Components", 0.14, 5.0, 1.0, 0.15, False),
+        ("Precision_Auto", "Precision Auto Parts", 0.11, 2.0, 0.5, 0.05, False),
+        ("Mahindra_Ancillary", "Mahindra Ancillary Division", 0.09, 4.0, 1.0, 0.10, False),
+        ("Tata_Motors_Peenya", "Tata Motors (Peenya)", 0.08, 3.0, 0.8, 0.08, False),
+        ("Vijay_Components", "Vijay Components Ltd", 0.07, 9.0, 1.5, 0.20, False),
+        ("Sigma_Automotive", "Sigma Automotive Corp", 0.06, 15.0, 2.0, 0.50, False),
+        ("Bosch_Engineering", "Bosch Engineering India", 0.05, 3.5, 0.7, 0.06, False),
+        ("Peenya_Forge_Works", "Peenya Forge Works", 0.05, 7.5, 1.2, 0.18, False),
+        ("Bangalore_CNC", "Bangalore CNC Castings", 0.04, 5.5, 1.0, 0.12, False),
+        ("Jindal_Toolings", "Jindal Toolings", 0.03, 4.5, 0.9, 0.10, False),
+        ("Others", "Other Customers", 0.08, 6.0, 1.0, 0.10, False),
+    ]
+
+    df_cols = {
         'Date': [d.strftime('%Y-%m-%d') for d in dates],
         'Revenue': np.round(revenue, 2),
         'Orders': orders,
@@ -122,44 +91,38 @@ def generate_sample_data(output_path):
         'ActiveCustomers': active_customers,
         'InventoryLevel': np.round(inventory_level, 4),
         'PaymentDelays': np.round(payment_delays, 2),
+    }
+
+    # Sum of shares to normalize
+    config_shares = sum(c[2] for c in customers_config[:-1])
+    others_share = 1.0 - config_shares
+
+    for key, name, share, delay_base, delay_noise, delayed_rate, is_abc in customers_config:
+        target_share = share if key != "Others" else others_share
         
-        # Customer ABC
-        'ABC_Industries_Rev': np.round(abc_rev, 2),
-        'ABC_Industries_Delay': np.round(abc_delay, 1),
-        'ABC_Industries_Invoices_Delayed': abc_inv_delayed,
-        'ABC_Industries_Invoices_Total': abc_inv_total,
+        # Generate dynamic revenue for customer
+        cust_rev = revenue * target_share + np.random.normal(0, 0.04 * target_share, num_weeks)
+        cust_rev = np.clip(cust_rev, 0.0, None)
         
-        # Customer Shree Auto
-        'Shree_Auto_Rev': np.round(shree_rev, 2),
-        'Shree_Auto_Delay': np.round(shree_delay, 1),
-        'Shree_Auto_Invoices_Delayed': shree_inv_delayed,
-        'Shree_Auto_Invoices_Total': shree_inv_total,
+        # Generate payment delay history
+        cust_delay = np.random.normal(delay_base, delay_noise, num_weeks)
+        if is_abc:
+            cust_delay[-12:] = cust_delay[-12:] + 12.0 # trigger ABC payment delay surge
+        cust_delay = np.clip(cust_delay, 0.0, None)
         
-        # Customer Precision Auto
-        'Precision_Auto_Rev': np.round(precision_rev, 2),
-        'Precision_Auto_Delay': np.round(precision_delay, 1),
-        'Precision_Auto_Invoices_Delayed': precision_inv_delayed,
-        'Precision_Auto_Invoices_Total': precision_inv_total,
-        
-        # Customer Vijay Components
-        'Vijay_Components_Rev': np.round(vijay_rev, 2),
-        'Vijay_Components_Delay': np.round(vijay_delay, 1),
-        'Vijay_Components_Invoices_Delayed': vijay_inv_delayed,
-        'Vijay_Components_Invoices_Total': vijay_inv_total,
-        
-        # Customer Sigma Automotive
-        'Sigma_Automotive_Rev': np.round(sigma_rev, 2),
-        'Sigma_Automotive_Delay': np.round(sigma_delay, 1),
-        'Sigma_Automotive_Invoices_Delayed': sigma_inv_delayed,
-        'Sigma_Automotive_Invoices_Total': sigma_inv_total,
-        
-        # Others
-        'Others_Rev': np.round(others_rev, 2),
-        'Others_Delay': np.round(others_delay, 1),
-        'Others_Invoices_Delayed': others_inv_delayed,
-        'Others_Invoices_Total': others_inv_total
-    })
-    
+        # Generate invoices
+        inv_multiplier = 3 if key == "Others" else 1
+        cust_inv_total = np.ones(num_weeks, dtype=int) * inv_multiplier
+        cust_inv_delayed = np.random.binomial(inv_multiplier, delayed_rate, num_weeks)
+        if is_abc:
+            cust_inv_delayed[-4:] = [1, 1, 0, 1] # 3 out of last 4 invoices delayed
+            
+        df_cols[f"{key}_Rev"] = np.round(cust_rev, 2)
+        df_cols[f"{key}_Delay"] = np.round(cust_delay, 1)
+        df_cols[f"{key}_Invoices_Delayed"] = cust_inv_delayed
+        df_cols[f"{key}_Invoices_Total"] = cust_inv_total
+
+    df = pd.DataFrame(df_cols)
     df.to_csv(output_path, index=False)
     return df
 

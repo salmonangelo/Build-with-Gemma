@@ -81,7 +81,7 @@ export const BusinessDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const explanation = await getSectionExplanation(section, data);
       setExplainText(explanation);
     } catch (e: any) {
-      setExplainText("Failed to compile explanation from Gemini: " + e.message);
+      setExplainText("Failed to compile explanation: " + e.message);
     } finally {
       setExplainLoading(false);
     }

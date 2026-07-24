@@ -56,6 +56,7 @@ model MarketSignal {
   relevance String
   tag       String
   desc      String
+  url       String
 }
 
 model PricingRecommendation {
@@ -67,6 +68,9 @@ model PricingRecommendation {
   accepted   Boolean  @default(false)
   rejected   Boolean  @default(false)
   expanded   Boolean  @default(false)
+  sourceName String?
+  sourceDate String?
+  sourceUrl  String?
 }
 
 model StructuralRisk {
@@ -110,4 +114,15 @@ model OutreachLog {
   tone      String
   content   String
   sentAt    DateTime @default(now())
+}
+
+model Supplier {
+  id                Int      @id @default(autoincrement())
+  name              String   @unique
+  materials         String
+  avgLeadTime       String
+  estimatedQuote    String
+  reliabilityRating String
+  contactChannel    String
+  sourceUrl         String
 }

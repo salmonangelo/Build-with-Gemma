@@ -1,10 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
+import dotenv from "dotenv";
+import path from "path";
+
+dotenv.config({ path: path.join(__dirname, "../../.env") });
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-const connectionString = process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/revenue_intelligence?schema=public";
+const connectionString = process.env.DATABASE_URL || "postgresql://postgres:salmon%4011@localhost:5432/revenue_intelligence?schema=public";
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 

@@ -1,9 +1,10 @@
 import { prisma } from "../src/lib/prisma-client";
 
 async function main() {
-  console.log("Seeding database...");
+  console.log("Seeding database with updated real-world links and relative dates...");
 
   // Clean old data
+  await prisma.supplier.deleteMany();
   await prisma.industryNews.deleteMany();
   await prisma.structuralRisk.deleteMany();
   await prisma.pricingRecommendation.deleteMany();
@@ -13,6 +14,13 @@ async function main() {
   await prisma.order.deleteMany();
   await prisma.material.deleteMany();
   await prisma.inventoryItem.deleteMany();
+
+  // Helper for dynamic relative dates
+  const formatRelativeDate = (daysOffset: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + daysOffset);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
 
   // 1. Seed Materials
   const materialAluminium = await prisma.material.create({
@@ -58,7 +66,7 @@ async function main() {
       qty: "15 Tons",
       supplier: "Peenya Steel Distributor",
       currentNode: "Distributor Node (Bengaluru Outer Ring)",
-      eta: "July 20 (4 Days Delay)",
+      eta: `${formatRelativeDate(4)} (4 Days Delay)`,
       status: "delayed",
       gemmaAnnotation:
         "Steel batch stuck at distributor stage — 4 day delay risk. This creates a liquidity bottleneck for Order #221. Consider executing buffer pricing (+2.5% markup) to hedge against delayed cash collection.",
@@ -81,7 +89,7 @@ async function main() {
       qty: "5 Tons",
       supplier: "Bommasandra Metal Casting",
       currentNode: "Warehouse Node (Jigani Industrial)",
-      eta: "July 17 (On Time)",
+      eta: `${formatRelativeDate(0)} (On Time)`,
       status: "on-time",
       gemmaAnnotation:
         "Aluminium alloy supply is secure at standard rate. Standard margins are valid for this batch.",
@@ -108,6 +116,7 @@ async function main() {
         relevance: "high",
         tag: "Directly affects Mild Steel Rod order pricing (Order #221)",
         desc: "Supplier costs for Mild Steel Rods are set to escalate by ₹3,400/ton by next week.",
+        url: "https://www.metalbulletin.com"
       },
       {
         title: "Bengaluru EV Parts Cluster Demand Increases by 30% YoY",
@@ -116,6 +125,7 @@ async function main() {
         relevance: "medium",
         tag: "Long-term risk: 30% of your tooling output is ICE-specific",
         desc: "Traditional engine components face shrinking order volume. Shift to EV casing casting recommended.",
+        url: "https://economictimes.indiatimes.com/industry/renewables/ev-sales-surge-in-karnataka"
       },
       {
         title: "Bommasandra Power Grid Announces 4-Hour Scheduled Daily Maintenance",
@@ -124,6 +134,7 @@ async function main() {
         relevance: "high",
         tag: "Affects CNC facility operational overhead costs",
         desc: "Generator fuel backup costs will rise by ₹150/hour, reducing net margins on batch casting orders.",
+        url: "https://bescom.karnataka.gov.in"
       },
     ],
   });
@@ -136,27 +147,33 @@ async function main() {
         trigger: "Mild Steel Cost index +6.3% in Peenya Cluster",
         action: "Increase Price by +3.4% on Mild Steel products for new batches",
         confidence: "high",
-        reasoning: [
+        reasoning: JSON.stringify([
           "Supplier raw steel quotes rose by ₹3,600/ton yesterday.",
           "Your current net margin on Mild Steel parts is 11.2%, which is close to your critical safety margin (10.0%).",
           "Client sensitivity analysis indicates a price elasticity of -0.4, allowing a +3.4% pass-through markup without order volume deterioration.",
-        ],
+        ]),
         accepted: false,
         rejected: false,
         expanded: false,
+        sourceName: "MetalBulletin News",
+        sourceDate: "Yesterday",
+        sourceUrl: "https://www.metalbulletin.com"
       },
       {
         id: "REC-02",
         trigger: "BESCOM 4-Hr power maintenance surcharge added",
         action: "Apply ₹40/batch operational energy buffer surcharge",
         confidence: "medium",
-        reasoning: [
+        reasoning: JSON.stringify([
           "CNC operational backup diesel generator runs cost ₹150 extra per hour.",
           "This surcharge directly prevents a 1.2% gross margin bleed on current scheduled batch runs.",
-        ],
+        ]),
         accepted: false,
         rejected: false,
         expanded: false,
+        sourceName: "BESCOM Portal",
+        sourceDate: "2 days ago",
+        sourceUrl: "https://bescom.karnataka.gov.in"
       },
     ],
   });
@@ -260,6 +277,102 @@ async function main() {
         minThreshold: 10,
         status: "Low Stock",
         image: "/inventory/battery-housing.png"
+      }
+    ]
+  });
+
+  // 9. Seed Suppliers (Directory)
+  await prisma.supplier.createMany({
+    data: [
+      {
+        name: "Bommasandra Metal Casting",
+        materials: "Aluminium Alloy (6061, 7075)",
+        avgLeadTime: "4 Days",
+        estimatedQuote: "₹380 / kg",
+        reliabilityRating: "98% Excellent",
+        contactChannel: "sales@bommasandrametal.in",
+        sourceUrl: "https://dir.indiamart.com/bengaluru/metal-castings.html"
+      },
+      {
+        name: "Jigani Tooling Labs Ltd",
+        materials: "Carbide bits, coolant, drill rods",
+        avgLeadTime: "3 Days",
+        estimatedQuote: "₹340 / pc",
+        reliabilityRating: "95% High",
+        contactChannel: "procurement@jiganitooling.co.in",
+        sourceUrl: "https://dir.indiamart.com/bengaluru/cnc-tooling-holders.html"
+      },
+      {
+        name: "Peenya Steel Distributors",
+        materials: "Mild Steel, Carbon billets",
+        avgLeadTime: "6 Days",
+        estimatedQuote: "₹58,000 / ton",
+        reliabilityRating: "89% Stable",
+        contactChannel: "orders@peenyasteels.com",
+        sourceUrl: "https://dir.indiamart.com/bengaluru/mild-steel-round-bars.html"
+      },
+      {
+        name: "Peenya Industrial Area (Karnataka Tooling Co.)",
+        materials: "Drill inserts, grinding wheels",
+        avgLeadTime: "7 Days",
+        estimatedQuote: "₹410 / pc",
+        reliabilityRating: "85% Stable",
+        contactChannel: "contact@kartool.in",
+        sourceUrl: "https://dir.indiamart.com/bengaluru/grinding-wheels.html"
+      },
+      {
+        name: "Whitefield Precision Alloys",
+        materials: "Nickel Alloys, High-tensile fasteners",
+        avgLeadTime: "5 Days",
+        estimatedQuote: "₹720 / kg",
+        reliabilityRating: "93% High",
+        contactChannel: "sales@whitefieldalloys.co.in",
+        sourceUrl: "https://dir.indiamart.com/bengaluru/nickel-alloy.html"
+      },
+      {
+        name: "Yeshwanthpur Industrial Steel",
+        materials: "Stainless Steel sheets, angle bars",
+        avgLeadTime: "3 Days",
+        estimatedQuote: "₹64,000 / ton",
+        reliabilityRating: "91% Stable",
+        contactChannel: "yeshwanthpur.steel@gmail.com",
+        sourceUrl: "https://dir.indiamart.com/bengaluru/stainless-steel-sheets.html"
+      },
+      {
+        name: "Rajajinagar Carbide Tools",
+        materials: "Carbide inserts, boring bars",
+        avgLeadTime: "2 Days",
+        estimatedQuote: "₹290 / pc",
+        reliabilityRating: "96% Excellent",
+        contactChannel: "support@rajcarbide.in",
+        sourceUrl: "https://dir.indiamart.com/bengaluru/carbide-inserts.html"
+      },
+      {
+        name: "Hosur Casting Works",
+        materials: "Iron castings, engine cylinder castings",
+        avgLeadTime: "6 Days",
+        estimatedQuote: "₹310 / kg",
+        reliabilityRating: "88% Stable",
+        contactChannel: "info@hosurcastings.com",
+        sourceUrl: "https://dir.indiamart.com/bengaluru/cast-iron-castings.html"
+      },
+      {
+        name: "Nelamangala Steel Tubes",
+        materials: "Seamless pipes, hollow steel sections",
+        avgLeadTime: "8 Days",
+        estimatedQuote: "₹56,000 / ton",
+        reliabilityRating: "82% Moderate",
+        contactChannel: "supply@nelasteel.in",
+        sourceUrl: "https://dir.indiamart.com/bengaluru/seamless-steel-tubes.html"
+      },
+      {
+        name: "Doddaballapur Tooling Allied",
+        materials: "Milling cutters, machine vices",
+        avgLeadTime: "5 Days",
+        estimatedQuote: "₹450 / pc",
+        reliabilityRating: "94% High",
+        contactChannel: "orders@doddaballapurtooling.com",
+        sourceUrl: "https://dir.indiamart.com/bengaluru/milling-cutters.html"
       }
     ]
   });

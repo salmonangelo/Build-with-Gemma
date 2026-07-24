@@ -11,8 +11,12 @@ import {
   BookOpen
 } from 'lucide-react';
 import { Sidebar } from '@/components/Sidebar';
+import { TopHeader } from '@/components/TopHeader';
 import { AIAnalystChat } from '@/components/AIAnalystChat';
+import { OnboardingWizardModal } from '@/components/onboarding/OnboardingWizardModal';
+import { BeginnerHome } from '@/components/beginner/BeginnerHome';
 import { useBusinessData } from '@/context/BusinessDataContext';
+import { useOnboarding } from '@/context/OnboardingContext';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -33,7 +37,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, acti
     explainLoading
   } = useBusinessData();
   
+  const { tier } = useOnboarding();
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -41,7 +47,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, acti
     try {
       await uploadFile(file);
     } catch (e: any) {
-      // Error is caught and stored in context
+      // Error handled via context
     }
   };
 
@@ -51,17 +57,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, acti
   };
 
   return (
-    <div className="flex bg-background-custom min-h-screen text-text-foreground font-sans">
-      {/* 1. Left Sidebar */}
-      <Sidebar 
-        data={data}
-        activeSection={activeRoute}
-        setActiveSection={() => {}} // Controlled via links instead of SPA state
-        onOpenChat={() => setIsChatOpen(true)}
-        onTriggerUpload={triggerFileUpload}
-      />
-
-      {/* Hidden file input */}
+    <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] font-sans theme-transition flex flex-col md:flex-row">
+      {/* Hidden File Input */}
       <input 
         id="file-upload-input"
         type="file" 
@@ -70,93 +67,96 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, acti
         className="hidden" 
       />
 
-      {/* 2. Main Scrollable Panel */}
-      <div className="flex-1 p-6 overflow-y-auto max-h-screen space-y-6">
+      {/* 1. Left Sidebar (Fixed on Desktop, Drawer on Mobile) */}
+      <Sidebar 
+        data={data}
+        activeSection={activeRoute}
+        onOpenChat={() => setIsChatOpen(true)}
+        onTriggerUpload={triggerFileUpload}
+        mobileOpen={mobileSidebarOpen}
+        onCloseMobile={() => setMobileSidebarOpen(false)}
+      />
+
+      {/* 2. Main Workspace (Properly offset for left fixed sidebar on md+) */}
+      <div className="flex-1 md:pl-[80px] flex flex-col min-w-0 min-h-screen">
         
-        {/* Header Block */}
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border-subtle pb-4">
-          <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight font-display flex items-center gap-2">
-              {data?.summary.business_name || "Meenakshi Precision Components"}
-              <span className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider font-sans">Gemma Orchestrated</span>
-            </h1>
-            <p className="text-xs text-text-muted mt-0.5">
-              {data?.summary.industry || "CNC Precision Machining"} &mdash; {data?.summary.location || "Peenya, Bengaluru"}
-            </p>
-          </div>
+        {/* Unified Top Navigation Bar */}
+        <TopHeader 
+          businessName={data?.summary.business_name}
+          industry={data?.summary.industry}
+          location={data?.summary.location}
+          onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
+          onLoadSample={loadSample}
+          onTriggerUpload={triggerFileUpload}
+          loading={loading}
+        />
+
+        {/* Page Main Content Area */}
+        <main className="p-4 md:p-6 lg:p-8 flex-1 space-y-6 max-w-7xl w-full mx-auto">
           
-          <div className="flex gap-2">
-            <button 
-              onClick={loadSample}
-              disabled={loading}
-              className="flex items-center gap-1.5 px-4 py-2 bg-background border border-border-subtle hover:bg-background-custom text-text-foreground rounded-full text-xs font-bold transition-all disabled:opacity-50"
-            >
-              <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-              <span>Load Sample</span>
-            </button>
-            <button 
-              onClick={triggerFileUpload}
-              disabled={loading}
-              className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-full text-xs font-bold transition-all shadow-soft disabled:opacity-50"
-            >
-              <Upload size={13} />
-              <span>Upload CSV</span>
-            </button>
-          </div>
-        </header>
-
-        {error && (
-          <div className="p-4 bg-primary/5 border border-primary/10 text-primary text-xs rounded-[20px] flex items-center justify-between font-bold">
-            <div className="flex items-center gap-2">
-              <Sparkles size={16} className="text-primary animate-pulse" />
-              <span>{error}</span>
-            </div>
-            <button 
-              onClick={() => setError(null)}
-              className="p-1 hover:bg-primary/10 rounded-full"
-            >
-              <X size={14} />
-            </button>
-          </div>
-        )}
-
-        {loading && !data ? (
-          <div className="h-[70vh] flex flex-col items-center justify-center gap-3">
-            <Loader2 size={32} className="text-primary animate-spin" />
-            <p className="text-xs font-bold text-text-muted font-display uppercase tracking-widest animate-pulse">Running reasoning orchestrator...</p>
-          </div>
-        ) : data ? (
-          <div className="animate-fade-in pb-12">
-            {children}
-          </div>
-        ) : (
-          <div className="h-[70vh] flex flex-col items-center justify-center gap-6 border-2 border-dashed border-border-subtle rounded-[24px] bg-white p-6 animate-fade-in">
-            <div className="p-4 bg-primary/5 text-primary rounded-full">
-              <FileSpreadsheet size={40} />
-            </div>
-            <div className="text-center max-w-sm space-y-1">
-              <h3 className="font-black text-slate-800 text-sm font-display">No Active Data Loaded</h3>
-              <p className="text-xs text-text-muted">Upload a customer payment history CSV or load the pre-configured sample to see the advisor platform.</p>
-            </div>
-            <div className="flex gap-3">
+          {/* Global Alert Notification */}
+          {error && (
+            <div className="p-4 bg-[var(--primary-subtle)] border border-[var(--primary)]/20 text-[var(--primary)] text-xs rounded-2xl flex items-center justify-between font-bold shadow-xs">
+              <div className="flex items-center gap-2">
+                <Sparkles size={16} className="text-[var(--primary)] animate-pulse" />
+                <span>{error}</span>
+              </div>
               <button 
-                onClick={loadSample}
-                className="px-5 py-2.5 bg-background border border-border-subtle hover:bg-background-custom text-text-foreground text-xs font-bold rounded-full transition-all"
+                onClick={() => setError(null)}
+                className="p-1 hover:bg-[var(--primary)]/10 rounded-full transition-colors cursor-pointer"
               >
-                Load Pre-Configured Sample
-              </button>
-              <button 
-                onClick={triggerFileUpload}
-                className="px-5 py-2.5 bg-primary hover:bg-primary-dark text-white text-xs font-bold rounded-full transition-all shadow-soft"
-              >
-                Upload Business History
+                <X size={14} />
               </button>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Data Loading & Empty State Handling */}
+          {loading && !data ? (
+            <div className="h-[70vh] flex flex-col items-center justify-center gap-3">
+              <Loader2 size={32} className="text-[var(--primary)] animate-spin" />
+              <p className="text-xs font-bold text-[var(--text-muted)] font-display uppercase tracking-widest animate-pulse">Running Gemma reasoning orchestrator...</p>
+            </div>
+          ) : data ? (
+            <div className="animate-fade-in pb-12">
+              {tier === 'beginner' && (activeRoute === 'dashboard' || activeRoute === '/') ? (
+                <BeginnerHome 
+                  data={data} 
+                  onOpenChat={() => setIsChatOpen(true)} 
+                  onTriggerUpload={triggerFileUpload} 
+                />
+              ) : (
+                children
+              )}
+            </div>
+          ) : (
+            <div className="h-[65vh] flex flex-col items-center justify-center gap-6 border-2 border-dashed border-[var(--border-subtle)] rounded-3xl bg-[var(--bg-card)] p-6 md:p-10 animate-fade-in text-center shadow-xs">
+              <div className="p-4 bg-[var(--primary-subtle)] text-[var(--primary)] rounded-full">
+                <FileSpreadsheet size={40} />
+              </div>
+              <div className="max-w-sm space-y-2">
+                <h3 className="font-black text-[var(--text-primary)] text-base font-display">No Active Data Loaded</h3>
+                <p className="text-xs text-[var(--text-muted)] leading-relaxed">Upload a customer payment history CSV or load the pre-configured sample to populate the advisor platform.</p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <button 
+                  onClick={loadSample}
+                  className="px-5 py-2.5 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] text-xs font-bold rounded-full transition-all cursor-pointer"
+                >
+                  Load Pre-Configured Sample
+                </button>
+                <button 
+                  onClick={triggerFileUpload}
+                  className="px-5 py-2.5 bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white text-xs font-bold rounded-full transition-all shadow-sm cursor-pointer"
+                >
+                  Upload Business History
+                </button>
+              </div>
+            </div>
+          )}
+        </main>
       </div>
 
-      {/* 3. Floating AI Analyst chat drawer */}
+      {/* 3. Floating AI Analyst Chat Drawer */}
       {data && (
         <AIAnalystChat 
           isOpen={isChatOpen}
@@ -165,19 +165,21 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, acti
         />
       )}
 
-      {/* 4. Explain Modal */}
+      {/* 4. Explain Insight Modal */}
       {explainSection && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[24px] border border-border-subtle w-full max-w-2xl shadow-2xl p-6 relative overflow-hidden animate-scale-up max-h-[85vh] flex flex-col justify-between">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] w-full max-w-2xl shadow-2xl rounded-3xl p-6 relative overflow-hidden animate-scale-up max-h-[85vh] flex flex-col justify-between">
             <div>
-              <div className="flex justify-between items-center border-b border-border-subtle pb-4 mb-4">
+              <div className="flex justify-between items-center border-b border-[var(--border-subtle)] pb-4 mb-4">
                 <div className="flex items-center gap-2">
-                  <BookOpen size={18} className="text-primary" />
-                  <h3 className="font-black text-sm text-text-foreground font-display capitalize">AI Analysis Insight &mdash; {explainSection.replace('_', ' ')}</h3>
+                  <BookOpen size={18} className="text-[var(--primary)]" />
+                  <h3 className="font-black text-sm text-[var(--text-primary)] font-display capitalize">
+                    AI Analysis Insight &mdash; {explainSection.replace('_', ' ')}
+                  </h3>
                 </div>
                 <button 
                   onClick={() => setExplainSection(null)}
-                  className="p-1 hover:bg-background-custom rounded-lg text-text-muted hover:text-text-foreground transition-colors"
+                  className="p-1 hover:bg-[var(--bg-subtle)] rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
                 >
                   <X size={18} />
                 </button>
@@ -186,21 +188,21 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, acti
               <div className="overflow-y-auto max-h-[55vh] pr-1 scrollbar-thin">
                 {explainLoading ? (
                   <div className="h-40 flex flex-col items-center justify-center gap-2">
-                    <Loader2 size={24} className="text-primary animate-spin" />
-                    <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider animate-pulse">Consulting Gemma Model...</p>
+                    <Loader2 size={24} className="text-[var(--primary)] animate-spin" />
+                    <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider animate-pulse">Consulting Gemma Model...</p>
                   </div>
                 ) : (
-                  <div className="text-xs text-text-foreground leading-relaxed whitespace-pre-wrap font-sans bg-background-custom p-4 rounded-[20px] border border-border-subtle">
+                  <div className="text-xs text-[var(--text-primary)] leading-relaxed whitespace-pre-wrap font-sans bg-[var(--bg-subtle)] p-4 rounded-2xl border border-[var(--border-subtle)]">
                     {explainText}
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="border-t border-border-subtle pt-4 mt-4 flex justify-end">
+            <div className="border-t border-[var(--border-subtle)] pt-4 mt-4 flex justify-end">
               <button 
                 onClick={() => setExplainSection(null)}
-                className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-full text-xs font-bold transition-colors"
+                className="px-5 py-2 bg-[var(--text-primary)] hover:opacity-90 text-[var(--text-inverse)] rounded-full text-xs font-bold transition-colors cursor-pointer"
               >
                 Close Insight
               </button>
@@ -208,7 +210,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, acti
           </div>
         </div>
       )}
+
+      {/* Onboarding Wizard Modal */}
+      <OnboardingWizardModal />
     </div>
   );
 };
+
 export default DashboardLayout;

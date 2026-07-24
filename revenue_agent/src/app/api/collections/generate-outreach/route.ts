@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
+import { ai, OPENROUTER_MODEL, isOpenRouterKeyValid } from '@/lib/ai';
 
 export const dynamic = "force-dynamic";
-
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY
-});
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 export async function POST(req: Request) {
   try {
@@ -41,35 +36,42 @@ export async function POST(req: Request) {
       Return the generated outreach copy in plain text. Do not wrap the output in markdown code blocks or add conversational explanations outside of the generated copy.
     `;
 
-    try {
-      const response = await ai.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: prompt
-      });
-      return NextResponse.json({ 
-        success: true, 
-        content: response.text || "Failed to generate reminder draft." 
-      });
-    } catch (apiErr) {
-      console.warn("Gemini API call failed, using local reminder fallback.");
-      let fallbackText = "";
-      
-      if (currentChannel === "whatsapp") {
-        if (currentTone === "gentle") {
-          fallbackText = `Hi ${client},\nChecking in regarding pending invoices totaling ₹${Number(outstandingBalance).toLocaleString("en-IN")}. Please let us know if you need any documents. Thank you!`;
-        } else if (currentTone === "firm") {
-          fallbackText = `Dear ${client},\nYour account balance of ₹${Number(outstandingBalance).toLocaleString("en-IN")} is overdue by ${averageDelay} days. Please clear it immediately to prevent credit holds.`;
-        } else {
-          fallbackText = `Dear ${client},\nReminder for outstanding invoices totaling ₹${Number(outstandingBalance).toLocaleString("en-IN")}. Please advise on the payout timeline.`;
+    if (isOpenRouterKeyValid(process.env.OPENROUTER_API_KEY)) {
+      try {
+        const response = await ai.chat.completions.create({
+          model: OPENROUTER_MODEL,
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.4
+        });
+        const text = response.choices[0]?.message?.content;
+        if (text) {
+          return NextResponse.json({ 
+            success: true, 
+            content: text 
+          });
         }
-      } else if (currentChannel === "phone") {
-        fallbackText = `Guided Phone Talking Points for ${client} collections call:
+      } catch (apiErr: any) {
+        console.warn("OpenRouter Gemma 3 API call failed (using local reminder fallback):", apiErr.message);
+      }
+    }
+
+    let fallbackText = "";
+    if (currentChannel === "whatsapp") {
+      if (currentTone === "gentle") {
+        fallbackText = `Hi ${client},\nChecking in regarding pending invoices totaling ₹${Number(outstandingBalance).toLocaleString("en-IN")}. Please let us know if you need any documents. Thank you!`;
+      } else if (currentTone === "firm") {
+        fallbackText = `Dear ${client},\nYour account balance of ₹${Number(outstandingBalance).toLocaleString("en-IN")} is overdue by ${averageDelay} days. Please clear it immediately to prevent credit holds.`;
+      } else {
+        fallbackText = `Dear ${client},\nReminder for outstanding invoices totaling ₹${Number(outstandingBalance).toLocaleString("en-IN")}. Please advise on the payout timeline.`;
+      }
+    } else if (currentChannel === "phone") {
+      fallbackText = `Guided Phone Talking Points for ${client} collections call:
 - Greet contact and mention outstanding balance of ₹${Number(outstandingBalance).toLocaleString("en-IN")}
 - Reference average delay is ${averageDelay} days
 - Inquire gently if there are technical processing delays on their side
 - Confirm payment commitment date and transfer channel`;
-      } else {
-        fallbackText = `Subject: Overdue Payment Reminder: ₹${Number(outstandingBalance).toLocaleString("en-IN")} - Meenakshi Precision
+    } else {
+      fallbackText = `Subject: Overdue Payment Reminder: ₹${Number(outstandingBalance).toLocaleString("en-IN")} - Meenakshi Precision
 
 Dear ${client} Finance Team,
 
@@ -80,9 +82,8 @@ Please verify invoice details and execute bank transfer at your earliest conveni
 Best Regards,
 Accounts Receivable Team
 Meenakshi Precision Components`;
-      }
-      return NextResponse.json({ success: true, content: fallbackText, fallback: true });
     }
+    return NextResponse.json({ success: true, content: fallbackText, fallback: true });
   } catch (error: any) {
     console.error("Outreach generator route error:", error);
     return NextResponse.json({ error: "Failed to generate outreach: " + error.message }, { status: 500 });

@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
+import { ai, OPENROUTER_MODEL, isOpenRouterKeyValid } from '@/lib/ai';
 
 export const dynamic = "force-dynamic";
-
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY
-});
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 export async function POST(req: Request) {
   try {
@@ -33,18 +28,26 @@ export async function POST(req: Request) {
       Format the output cleanly in plain text with clear headings, ready to be copied and printed. Do not include markdown code block formatting or other conversational comments outside the letter content itself.
     `;
 
-    try {
-      const response = await ai.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: prompt
-      });
-      return NextResponse.json({ 
-        success: true, 
-        rfqLetter: response.text || "Failed to generate RFQ." 
-      });
-    } catch (apiErr) {
-      console.warn("Gemini RFQ call failed, using local pre-compiled RFQ fallback.");
-      const fallbackRfq = `MEENAKSHI PRECISION COMPONENTS
+    if (isOpenRouterKeyValid(process.env.OPENROUTER_API_KEY)) {
+      try {
+        const response = await ai.chat.completions.create({
+          model: OPENROUTER_MODEL,
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.4
+        });
+        const text = response.choices[0]?.message?.content;
+        if (text) {
+          return NextResponse.json({ 
+            success: true, 
+            rfqLetter: text 
+          });
+        }
+      } catch (apiErr: any) {
+        console.warn("OpenRouter Gemma 3 RFQ call failed (using local pre-compiled RFQ):", apiErr.message);
+      }
+    }
+
+    const fallbackRfq = `MEENAKSHI PRECISION COMPONENTS
 Peenya Industrial Area, Bengaluru
 
 Date: July 18, 2026
@@ -74,10 +77,9 @@ Yours Sincerely,
 Procurement Department
 Meenakshi Precision Components`;
 
-      return NextResponse.json({ success: true, rfqLetter: fallbackRfq, fallback: true });
-    }
+    return NextResponse.json({ success: true, rfqLetter: fallbackRfq, fallback: true });
   } catch (error: any) {
-    console.error("Gemini RFQ generator error:", error);
+    console.error("OpenRouter RFQ generator error:", error);
     return NextResponse.json({ error: "Failed to generate RFQ letter: " + error.message }, { status: 500 });
   }
 }

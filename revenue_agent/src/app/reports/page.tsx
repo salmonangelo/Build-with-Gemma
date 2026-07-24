@@ -5,9 +5,7 @@ import {
   FileText, 
   Printer, 
   Sparkles, 
-  Download,
-  Loader2,
-  CheckCircle,
+  Loader2, 
   FileCheck
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -65,35 +63,35 @@ Use clean Markdown formatting. Include a header section, bulleted key findings, 
   return (
     <DashboardLayout activeRoute="/reports">
       {data && (
-        <div className="space-y-6 max-w-4xl mx-auto no-print">
+        <div className="space-y-6 max-w-4xl mx-auto no-print text-[var(--text-primary)]">
           <div>
-            <h2 className="text-base font-black text-slate-900 tracking-tight font-display">AI Executive Report Center</h2>
-            <p className="text-[11px] text-text-muted mt-0.5 font-sans">Compile formal PDF-ready advisory briefs synthesizing internal metrics, supplier lead times, raw material cost indexes, and collection warnings.</p>
+            <h2 className="text-base font-black text-[var(--text-primary)] tracking-tight font-display">AI Executive Report Center</h2>
+            <p className="text-[11px] text-[var(--text-muted)] mt-0.5 font-sans">Compile formal PDF-ready advisory briefs synthesizing internal metrics, supplier lead times, raw material cost indexes, and collection warnings.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Left: Template Selector */}
             <div className="md:col-span-1 space-y-4">
-              <div className="bg-white border border-border-subtle rounded-[24px] p-5 shadow-soft">
-                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-4 font-display">Select Report Template</h3>
+              <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-3xl p-5 shadow-xs">
+                <h3 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider mb-4 font-display">Select Report Template</h3>
                 
                 <div className="flex flex-col gap-2">
                   {[
                     { id: 'board', title: 'Board Briefing Memo', desc: 'High-level synthesis of margins, forecast and customer risk.' },
-                    { id: 'cashflow', title: 'Credit Control Brief', desc: ' receivables delay warnings and credit policies.' },
+                    { id: 'cashflow', title: 'Credit Control Brief', desc: 'Receivables delay warnings and credit policies.' },
                     { id: 'ops', title: 'Operational Hedging Memo', desc: 'BOM margin impacts and supply chain alternatives.' }
                   ].map((tpl) => (
                     <button
                       key={tpl.id}
                       onClick={() => setReportType(tpl.id as any)}
-                      className={`p-3 rounded-xl border text-left transition-all ${
+                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                         reportType === tpl.id 
-                          ? 'border-primary bg-primary/5 text-primary' 
-                          : 'border-border-subtle bg-white text-text-muted hover:border-primary/20'
+                          ? 'border-[var(--primary)] bg-[var(--primary-subtle)] text-[var(--primary)] font-bold' 
+                          : 'border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:border-[var(--primary)]/30'
                       }`}
                     >
-                      <h4 className="text-xs font-bold text-text-foreground">{tpl.title}</h4>
-                      <p className="text-[9px] text-text-muted mt-1 leading-snug">{tpl.desc}</p>
+                      <h4 className="text-xs font-bold text-[var(--text-primary)]">{tpl.title}</h4>
+                      <p className="text-[9px] text-[var(--text-muted)] mt-1 leading-snug">{tpl.desc}</p>
                     </button>
                   ))}
                 </div>
@@ -101,7 +99,7 @@ Use clean Markdown formatting. Include a header section, bulleted key findings, 
                 <button
                   onClick={handleGenerateReport}
                   disabled={generating}
-                  className="w-full py-2.5 bg-primary hover:bg-primary-dark disabled:bg-slate-200 text-white disabled:text-text-muted rounded-full text-xs font-bold transition-all shadow-soft flex items-center justify-center gap-1.5 mt-6"
+                  className="w-full py-2.5 bg-[var(--primary)] hover:bg-[var(--primary-dark)] disabled:opacity-50 text-white rounded-full text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 mt-6 cursor-pointer"
                 >
                   {generating ? (
                     <>
@@ -120,19 +118,18 @@ Use clean Markdown formatting. Include a header section, bulleted key findings, 
 
             {/* Right: Preview Block */}
             <div className="md:col-span-2 space-y-4">
-              <div className="bg-white border border-border-subtle rounded-[24px] p-6 shadow-soft min-h-[50vh] flex flex-col justify-between">
+              <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-3xl p-6 shadow-xs min-h-[50vh] flex flex-col justify-between">
                 {reportContent ? (
                   <div className="space-y-6">
-                    {/* Toolbar */}
-                    <div className="flex justify-between items-center border-b border-border-subtle pb-4 no-print">
-                      <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs">
+                    <div className="flex justify-between items-center border-b border-[var(--border-subtle)] pb-4 no-print">
+                      <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
                         <FileCheck size={16} />
                         <span>Brief Compiled Successfully</span>
                       </div>
                       <div className="flex gap-2">
                         <button 
                           onClick={handlePrint}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-background border border-border-subtle hover:bg-background-custom text-text-foreground rounded-lg text-[10px] font-bold transition-all"
+                          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] rounded-full text-[10px] font-bold transition-all cursor-pointer"
                         >
                           <Printer size={12} />
                           <span>Print Memo</span>
@@ -140,17 +137,16 @@ Use clean Markdown formatting. Include a header section, bulleted key findings, 
                       </div>
                     </div>
 
-                    {/* Report Output (Printable wrapper) */}
-                    <div className="print-report text-xs text-text-foreground leading-relaxed whitespace-pre-wrap font-sans bg-background-custom p-6 rounded-[20px] border border-border-subtle">
+                    <div className="print-report text-xs text-[var(--text-primary)] leading-relaxed whitespace-pre-wrap font-sans bg-[var(--bg-subtle)] p-6 rounded-2xl border border-[var(--border-subtle)]">
                       {reportContent}
                     </div>
                   </div>
                 ) : (
                   <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-3">
-                    <FileText size={36} className="text-text-muted animate-pulse" />
+                    <FileText size={36} className="text-[var(--text-muted)] animate-pulse" />
                     <div>
-                      <h4 className="text-xs font-bold text-slate-800 font-display">No Active Report Compiled</h4>
-                      <p className="text-[10px] text-text-muted max-w-xs mt-1">Select a briefing template on the left and click Compile to feed business variables to the advisor engine.</p>
+                      <h4 className="text-xs font-bold text-[var(--text-primary)] font-display">No Active Report Compiled</h4>
+                      <p className="text-[10px] text-[var(--text-muted)] max-w-xs mt-1">Select a briefing template on the left and click Compile to feed business variables to the advisor engine.</p>
                     </div>
                   </div>
                 )}
@@ -161,7 +157,6 @@ Use clean Markdown formatting. Include a header section, bulleted key findings, 
         </div>
       )}
 
-      {/* Global Print Styling block */}
       <style jsx global>{`
         @media print {
           .no-print, header, nav, button {
@@ -170,6 +165,7 @@ Use clean Markdown formatting. Include a header section, bulleted key findings, 
           .print-report {
             border: none !important;
             background: white !important;
+            color: black !important;
             padding: 0 !important;
             font-size: 14px !important;
           }

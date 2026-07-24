@@ -2,15 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import Parser from 'rss-parser';
-import { GoogleGenAI } from '@google/genai';
+import { ai, OPENROUTER_MODEL, isOpenRouterKeyValid } from './ai';
 
 const rssParser = new Parser();
-
-// Initialize GenAI
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY
-});
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 export const DEFAULT_BUSINESS_DATA = {
   summary: {
@@ -452,6 +446,9 @@ export function runJSFallback(filePath: string) {
 
 export async function fetchMarketNews() {
   console.log("📡 [News Crawler] Fetching real-time industry news feeds from Google News RSS...");
+  const now = new Date();
+  const timestamp = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ", " + now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  
   try {
     const query = 'manufacturing industry india OR steel prices india OR MSME manufacturing india';
     const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-IN&gl=IN&ceid=IN:en`;
@@ -459,7 +456,11 @@ export async function fetchMarketNews() {
     const feed = await rssParser.parseURL(url);
     if (!feed.items || feed.items.length === 0) {
       console.warn("⚠️ [News Crawler] Google News RSS query returned empty items. Falling back to predetermined news.");
-      return FALLBACK_NEWS;
+      return FALLBACK_NEWS.map(art => ({
+        ...art,
+        isLive: false,
+        timestamp: `${timestamp} (Cached)`
+      }));
     }
     
     const articles = feed.items.slice(0, 8).map(item => {
@@ -496,13 +497,15 @@ export async function fetchMarketNews() {
       if (cleanMatch) {
         titleClean = cleanMatch[1].trim();
       }
-
+ 
       return {
         title: titleClean,
         source: source,
         pubDate: pubDate,
         link: item.link || "https://economictimes.indiatimes.com",
-        category: category
+        category: category,
+        isLive: true,
+        timestamp: timestamp
       };
     });
     
@@ -510,7 +513,11 @@ export async function fetchMarketNews() {
     return articles;
   } catch (error: any) {
     console.error("❌ [News Crawler] RSS parsing failed. Falling back to default mock news. Error:", error.message);
-    return FALLBACK_NEWS;
+    return FALLBACK_NEWS.map(art => ({
+      ...art,
+      isLive: false,
+      timestamp: `${timestamp} (Cached)`
+    }));
   }
 }
 
@@ -675,15 +682,18 @@ ${JSON.stringify({
 `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json'
-      }
+    if (!isOpenRouterKeyValid(process.env.OPENROUTER_API_KEY)) {
+      throw new Error("No valid OPENROUTER_API_KEY provided (offline mode fallback).");
+    }
+
+    const response = await ai.chat.completions.create({
+      model: OPENROUTER_MODEL,
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.4,
+      response_format: { type: "json_object" }
     });
 
-    const text = response.text || '{}';
+    const text = response.choices[0]?.message?.content || '{}';
     return JSON.parse(text);
   } catch (error: any) {
     console.error("Gemma API Call failed. Creating mock reasoning fallback:", error.message);

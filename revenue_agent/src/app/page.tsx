@@ -1,109 +1,56 @@
 "use client";
 
-import React from 'react';
-import { 
-  ArrowRight, 
-  Coins, 
-  TrendingUp, 
-  Truck, 
-  DollarSign 
-} from 'lucide-react';
-import Link from 'next/link';
-import { DashboardLayout } from '@/components/DashboardLayout';
-export const dynamic = "force-dynamic";
-import { KPISection } from '@/components/KPISection';
-import { ExecutiveRecommendation } from '@/components/ExecutiveRecommendation';
-import { useBusinessData } from '@/context/BusinessDataContext';
+import React from "react";
+import DashboardLayout from "@/components/DashboardLayout";
+import PillarCard from "@/components/PillarCard";
 
-export default function OverviewPage() {
-  const { data } = useBusinessData();
+const activePillars = [
+  { title: "Pricing Agent", path: "/pricing-agent", icon: "Coins" as const, description: "Optimize margins with CNC quote calculators & material cost indexing." },
+  { title: "Revenue Intelligence", path: "/revenue-intelligence", icon: "TrendingUp" as const, description: "XGBoost revenue predictions with SHAP explainable breakdown." },
+  { title: "Customer Intelligence", path: "/customer-intelligence", icon: "Users" as const, description: "Predict payment delays, risk flags, and credit terms." },
+  { title: "Supplier Agent", path: "/supplier-agent", icon: "Truck" as const, description: "Automate invoice verification and vendor penalty tracking." },
+  { title: "Collections Agent", path: "/collections-agent", icon: "DollarSign" as const, description: "Dunnings automation and invoice follow-up workflows." },
+  { title: "Market Intelligence", path: "/market-intelligence", icon: "Globe" as const, description: "Real-time raw material prices and macro industry trends." },
+  { title: "Ask AI CFO", path: "/ask-ai-cfo", icon: "MessageSquare" as const, description: "Interactive conversational CFO assistant powered by Gemma." },
+  { title: "What-If Simulator", path: "/what-if-simulator", icon: "Sliders" as const, description: "Simulate price hikes, demand shocks, and margin impacts." },
+  { title: "Executive Advisor", path: "/executive-advisor", icon: "Sparkles" as const, description: "High-level strategic recommendations for MSME leadership." },
+  { title: "Reports", path: "/reports", icon: "FileText" as const, description: "Generate comprehensive executive summaries and financial reports." }
+];
 
+export default function Home() {
   return (
-    <DashboardLayout activeRoute="dashboard">
-      {data && (
-        <div className="space-y-6">
-          {/* Main summary KPI row */}
-          <KPISection data={data} />
-
-          {/* Quick Pillars Navigation Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Pricing Agent Card */}
-            <Link 
-              href="/pricing-agent"
-              className="bg-white border border-border-subtle hover:border-primary/20 p-5 rounded-[24px] shadow-soft hover:shadow-md transition-all group flex flex-col justify-between h-40"
-            >
-              <div>
-                <div className="w-10 h-10 bg-primary/5 text-primary rounded-xl flex items-center justify-center mb-3">
-                  <Coins size={20} />
-                </div>
-                <h3 className="font-black text-xs text-text-foreground font-display tracking-tight group-hover:text-primary transition-colors">Pricing Agent</h3>
-                <p className="text-[10px] text-text-muted mt-1 leading-snug">Watch BOM margins, steel inflation and negotiate customer contracts.</p>
-              </div>
-              <div className="flex items-center gap-1 text-[10px] text-primary font-black mt-2 self-end">
-                <span>Open Agent</span>
-                <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
-              </div>
-            </Link>
-
-            {/* Revenue Forecasting Card */}
-            <Link 
-              href="/revenue-intelligence"
-              className="bg-white border border-border-subtle hover:border-primary/20 p-5 rounded-[24px] shadow-soft hover:shadow-md transition-all group flex flex-col justify-between h-40"
-            >
-              <div>
-                <div className="w-10 h-10 bg-primary/5 text-primary rounded-xl flex items-center justify-center mb-3">
-                  <TrendingUp size={20} />
-                </div>
-                <h3 className="font-black text-xs text-text-foreground font-display tracking-tight group-hover:text-primary transition-colors">Revenue Intelligence</h3>
-                <p className="text-[10px] text-text-muted mt-1 leading-snug">XGBoost weekly predictions and SHAP explainability variables.</p>
-              </div>
-              <div className="flex items-center gap-1 text-[10px] text-primary font-black mt-2 self-end">
-                <span>Open Agent</span>
-                <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
-              </div>
-            </Link>
-
-            {/* Supplier Management Card */}
-            <Link 
-              href="/supplier-agent"
-              className="bg-white border border-border-subtle hover:border-primary/20 p-5 rounded-[24px] shadow-soft hover:shadow-md transition-all group flex flex-col justify-between h-40"
-            >
-              <div>
-                <div className="w-10 h-10 bg-primary/5 text-primary rounded-xl flex items-center justify-center mb-3">
-                  <Truck size={20} />
-                </div>
-                <h3 className="font-black text-xs text-text-foreground font-display tracking-tight group-hover:text-primary transition-colors">Supplier Agent</h3>
-                <p className="text-[10px] text-text-muted mt-1 leading-snug">Track machine components, lead times, and alternative vendor sources.</p>
-              </div>
-              <div className="flex items-center gap-1 text-[10px] text-primary font-black mt-2 self-end">
-                <span>Open Agent</span>
-                <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
-              </div>
-            </Link>
-
-            {/* Collections Agent Card */}
-            <Link 
-              href="/collections-agent"
-              className="bg-white border border-border-subtle hover:border-primary/20 p-5 rounded-[24px] shadow-soft hover:shadow-md transition-all group flex flex-col justify-between h-40"
-            >
-              <div>
-                <div className="w-10 h-10 bg-primary/5 text-primary rounded-xl flex items-center justify-center mb-3">
-                  <DollarSign size={20} />
-                </div>
-                <h3 className="font-black text-xs text-text-foreground font-display tracking-tight group-hover:text-primary transition-colors">Collections Agent</h3>
-                <p className="text-[10px] text-text-muted mt-1 leading-snug">Flag customer late billing risks and generate follow-up outlines.</p>
-              </div>
-              <div className="flex items-center gap-1 text-[10px] text-primary font-black mt-2 self-end">
-                <span>Open Agent</span>
-                <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
-              </div>
-            </Link>
+    <DashboardLayout activeRoute="/">
+      <div className="space-y-6 animate-fade-in">
+        {/* Welcome Hero Banner */}
+        <section className="bg-[var(--bg-card)] p-6 md:p-8 rounded-3xl border border-[var(--border-subtle)] shadow-xs relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--primary)]/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative z-10 max-w-3xl space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--primary-subtle)] text-[var(--primary)] rounded-full text-xs font-bold font-sans">
+              <span className="w-2 h-2 rounded-full bg-[var(--primary)] animate-ping" />
+              FinCent Copilot Active
+            </div>
+            <h2 className="font-display font-extrabold text-2xl md:text-3xl text-[var(--text-primary)] tracking-tight">
+              Welcome back to Revenue Intelligence
+            </h2>
+            <p className="text-[var(--text-muted)] font-sans text-xs md:text-sm leading-relaxed">
+              AI-Powered Financial Copilot for Manufacturing MSMEs. Select a module below to inspect real-time metrics, risk forecasts, and automated agent recommendations.
+            </p>
           </div>
+        </section>
 
-          {/* AI Executive advisor checklist */}
-          <ExecutiveRecommendation data={data} onExplain={() => {}} />
+        {/* Pillar Cards Grid Matrix */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+          {activePillars.map((pillar, idx) => (
+            <PillarCard
+              key={idx}
+              title={pillar.title}
+              path={pillar.path}
+              icon={pillar.icon}
+              description={pillar.description}
+            />
+          ))}
         </div>
-      )}
+      </div>
     </DashboardLayout>
   );
 }

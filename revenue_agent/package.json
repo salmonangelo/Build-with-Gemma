@@ -3,17 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "predev": "npx tsx scripts/check-db.ts",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
-    "@google/genai": "^2.12.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "lucide-react": "^0.471.0",
     "next": "15.5.20",
+    "openai": "^6.49.0",
     "pg": "^8.22.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",

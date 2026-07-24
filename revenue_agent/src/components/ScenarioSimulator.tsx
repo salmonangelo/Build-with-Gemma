@@ -56,22 +56,22 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   };
 
   return (
-    <div className="bg-white border border-border-subtle text-text-foreground rounded-[24px] p-6 shadow-soft relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full translate-x-8 -translate-y-8"></div>
+    <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--text-primary)] rounded-3xl p-6 shadow-xs relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--primary)]/5 rounded-full translate-x-8 -translate-y-8 pointer-events-none" />
       
-      <div className="flex justify-between items-center border-b border-border-subtle pb-4 mb-6">
+      <div className="flex justify-between items-center border-b border-[var(--border-subtle)] pb-4 mb-6">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-primary/5 text-primary rounded-xl">
+          <div className="p-2 bg-[var(--primary-subtle)] text-[var(--primary)] rounded-xl">
             <Sliders size={18} />
           </div>
           <div>
-            <h3 className="font-black text-sm tracking-tight text-text-foreground font-display">Scenario Simulator</h3>
-            <p className="text-[10px] text-text-muted mt-0.5 font-bold font-sans">Override operational constraints to recalculate forecasts and risk scores</p>
+            <h3 className="font-black text-sm tracking-tight text-[var(--text-primary)] font-display">Scenario Simulator</h3>
+            <p className="text-[10px] text-[var(--text-muted)] mt-0.5 font-bold font-sans">Override operational constraints to recalculate forecasts and risk scores</p>
           </div>
         </div>
         <button 
           onClick={handleLocalReset}
-          className="p-1.5 hover:bg-background-custom rounded-lg text-text-muted hover:text-text-foreground transition-colors"
+          className="p-1.5 hover:bg-[var(--bg-subtle)] rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
           title="Reset Sliders"
         >
           <RefreshCw size={14} />
@@ -82,8 +82,8 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
         {/* Sliders Block 1: Volume */}
         <div className="space-y-4">
           <div className="flex justify-between items-center text-xs">
-            <span className="text-text-muted font-bold font-display">Orders Volume</span>
-            <span className="text-primary font-black">{ordersMultiplier.toFixed(2)}x</span>
+            <span className="text-[var(--text-muted)] font-bold font-display">Orders Volume</span>
+            <span className="text-[var(--primary)] font-black">{ordersMultiplier.toFixed(2)}x</span>
           </div>
           <input 
             type="range" 
@@ -92,9 +92,9 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
             step="0.05"
             value={ordersMultiplier}
             onChange={(e) => setOrdersMultiplier(parseFloat(e.target.value))}
-            className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary"
+            className="w-full h-1.5 bg-[var(--bg-subtle)] rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
-          <div className="flex justify-between text-[9px] text-text-muted font-bold font-sans">
+          <div className="flex justify-between text-[9px] text-[var(--text-muted)] font-bold font-sans">
             <span>0.7x (Slowdown)</span>
             <span>1.3x (Surge)</span>
           </div>
@@ -103,8 +103,8 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
         {/* Sliders Block 2: Steel Price */}
         <div className="space-y-4">
           <div className="flex justify-between items-center text-xs">
-            <span className="text-text-muted font-bold font-display">Steel Prices Index</span>
-            <span className="text-primary font-black">{steelPriceMultiplier.toFixed(2)}x</span>
+            <span className="text-[var(--text-muted)] font-bold font-display">Steel Prices Index</span>
+            <span className="text-[var(--primary)] font-black">{steelPriceMultiplier.toFixed(2)}x</span>
           </div>
           <input 
             type="range" 
@@ -113,9 +113,9 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
             step="0.05"
             value={steelPriceMultiplier}
             onChange={(e) => setSteelPriceMultiplier(parseFloat(e.target.value))}
-            className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary"
+            className="w-full h-1.5 bg-[var(--bg-subtle)] rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
-          <div className="flex justify-between text-[9px] text-text-muted font-bold font-sans">
+          <div className="flex justify-between text-[9px] text-[var(--text-muted)] font-bold font-sans">
             <span>0.8x (Margin Relief)</span>
             <span>1.5x (Severe Spike)</span>
           </div>
@@ -124,8 +124,8 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
         {/* Sliders Block 3: Payment Delay */}
         <div className="space-y-4">
           <div className="flex justify-between items-center text-xs">
-            <span className="text-text-muted font-bold font-display">Payment delays</span>
-            <span className="text-primary font-black">
+            <span className="text-[var(--text-muted)] font-bold font-display">Payment delays</span>
+            <span className="text-[var(--primary)] font-black">
               {paymentDelayModifier > 0 ? `+${paymentDelayModifier}` : paymentDelayModifier} Days
             </span>
           </div>
@@ -136,9 +136,9 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
             step="1"
             value={paymentDelayModifier}
             onChange={(e) => setPaymentDelayModifier(parseInt(e.target.value))}
-            className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary"
+            className="w-full h-1.5 bg-[var(--bg-subtle)] rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
-          <div className="flex justify-between text-[9px] text-text-muted font-bold font-sans">
+          <div className="flex justify-between text-[9px] text-[var(--text-muted)] font-bold font-sans">
             <span>-5 Days (Acceleration)</span>
             <span>+15 Days (Severe Delay)</span>
           </div>
@@ -147,8 +147,8 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
         {/* Sliders Block 4: Machine Util */}
         <div className="space-y-4">
           <div className="flex justify-between items-center text-xs">
-            <span className="text-text-muted font-bold font-display">Machine Utilization</span>
-            <span className="text-emerald-600 font-black">{utilizationMultiplier.toFixed(2)}x</span>
+            <span className="text-[var(--text-muted)] font-bold font-display">Machine Utilization</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-black">{utilizationMultiplier.toFixed(2)}x</span>
           </div>
           <input 
             type="range" 
@@ -157,25 +157,25 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
             step="0.05"
             value={utilizationMultiplier}
             onChange={(e) => setUtilizationMultiplier(parseFloat(e.target.value))}
-            className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+            className="w-full h-1.5 bg-[var(--bg-subtle)] rounded-lg appearance-none cursor-pointer accent-emerald-500"
           />
-          <div className="flex justify-between text-[9px] text-text-muted font-bold font-sans">
+          <div className="flex justify-between text-[9px] text-[var(--text-muted)] font-bold font-sans">
             <span>0.8x (Downtime)</span>
             <span>1.2x (Optimized capacity)</span>
           </div>
         </div>
       </div>
 
-      <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-border-subtle">
-        <div className="flex items-center gap-2 text-[10px] text-text-muted text-left font-bold font-sans">
-          <Info size={12} className="text-primary flex-shrink-0" />
+      <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-[var(--border-subtle)]">
+        <div className="flex items-center gap-2 text-[10px] text-[var(--text-muted)] text-left font-bold font-sans">
+          <Info size={12} className="text-[var(--primary)] flex-shrink-0" />
           <span>Click run to feed the new overridden parameters directly into the XGBoost and Gemma reasoning layer.</span>
         </div>
         
         <button
           onClick={handleRunSimulation}
           disabled={loading}
-          className="w-full sm:w-auto px-5 py-2.5 bg-primary hover:bg-primary-dark disabled:bg-slate-200 text-white rounded-full text-xs font-bold flex items-center justify-center gap-1.5 shadow-soft transition-all active:scale-[0.98]"
+          className="w-full sm:w-auto px-5 py-2.5 bg-[var(--primary)] hover:bg-[var(--primary-dark)] disabled:opacity-50 text-white rounded-full text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
         >
           {loading ? (
             <>
@@ -192,7 +192,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
       </div>
 
       {error && (
-        <div className="mt-4 p-3 bg-primary/5 border border-primary/10 text-primary text-xs rounded-[16px] flex items-center gap-2 font-bold">
+        <div className="mt-4 p-3 bg-[var(--primary-subtle)] border border-[var(--primary)]/20 text-[var(--primary)] text-xs rounded-2xl flex items-center gap-2 font-bold">
           <ShieldAlert size={14} />
           <span>{error}</span>
         </div>
@@ -200,4 +200,5 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
     </div>
   );
 };
+
 export default ScenarioSimulator;

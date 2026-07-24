@@ -66,30 +66,29 @@ export default function DataImportPanel({ onDataImported }: DataImportPanelProps
   };
 
   return (
-    <div className="app-card border border-border-subtle bg-white p-6 shadow-sm">
+    <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] p-6 rounded-3xl shadow-xs text-[var(--text-primary)]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+          <div className="h-9 w-9 rounded-xl bg-[var(--primary-subtle)] text-[var(--primary)] flex items-center justify-center">
             <LuFileSpreadsheet size={18} />
           </div>
           <div>
-            <h3 className="font-display font-bold text-slate-800 text-sm sm:text-base">
+            <h3 className="font-display font-bold text-[var(--text-primary)] text-sm sm:text-base">
               Import Billing & Quote Data
             </h3>
-            <p className="text-xs font-semibold text-slate-400">
+            <p className="text-xs font-medium text-[var(--text-muted)]">
               Upload supplier PDF invoices, Excel spreadsheets, or past prices to ground calculations
             </p>
           </div>
         </div>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="text-xs font-bold text-primary hover:text-primary-dark cursor-pointer uppercase tracking-wider"
+          className="text-xs font-bold text-[var(--primary)] hover:underline cursor-pointer uppercase tracking-wider font-display"
         >
           {isOpen ? "Hide Panel" : "Expand"}
         </button>
       </div>
 
-      {/* Hidden file input */}
       <input
         type="file"
         ref={fileInputRef}
@@ -99,73 +98,71 @@ export default function DataImportPanel({ onDataImported }: DataImportPanelProps
       />
 
       {isOpen && (
-        <div className="mt-6 pt-6 border-t border-slate-100 transition-all duration-300">
+        <div className="mt-6 pt-6 border-t border-[var(--border-subtle)] transition-all duration-300">
           {importStatus === "idle" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Drag and drop trigger zones */}
               <div 
                 onClick={handleZoneClick}
-                className="border-2 border-dashed border-slate-200 hover:border-primary/50 bg-slate-50 hover:bg-white rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group"
+                className="border-2 border-dashed border-[var(--border-subtle)] hover:border-[var(--primary)]/50 bg-[var(--bg-subtle)] hover:bg-[var(--bg-card-hover)] rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group"
               >
-                <LuUpload size={32} className="text-slate-400 group-hover:text-primary transition-colors mb-3" />
-                <span className="text-xs font-bold text-slate-800 mb-1">Upload PDF Supplier Invoice / Quote</span>
-                <span className="text-[10px] text-slate-400">Extract pricing arrays and item terms automatically</span>
+                <LuUpload size={32} className="text-[var(--text-muted)] group-hover:text-[var(--primary)] transition-colors mb-3" />
+                <span className="text-xs font-bold text-[var(--text-primary)] mb-1">Upload PDF Supplier Invoice / Quote</span>
+                <span className="text-[10px] text-[var(--text-muted)]">Extract pricing arrays and item terms automatically</span>
               </div>
 
               <div 
                 onClick={handleZoneClick}
-                className="border-2 border-dashed border-slate-200 hover:border-primary/50 bg-slate-50 hover:bg-white rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group"
+                className="border-2 border-dashed border-[var(--border-subtle)] hover:border-[var(--primary)]/50 bg-[var(--bg-subtle)] hover:bg-[var(--bg-card-hover)] rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group"
               >
-                <LuFileSpreadsheet size={32} className="text-slate-400 group-hover:text-primary transition-colors mb-3" />
-                <span className="text-xs font-bold text-slate-800 mb-1">Upload Excel Tooling/Material Log</span>
-                <span className="text-[10px] text-slate-400">Directly sync bulk stock item lists</span>
+                <LuFileSpreadsheet size={32} className="text-[var(--text-muted)] group-hover:text-[var(--primary)] transition-colors mb-3" />
+                <span className="text-xs font-bold text-[var(--text-primary)] mb-1">Upload Excel Tooling/Material Log</span>
+                <span className="text-[10px] text-[var(--text-muted)]">Directly sync bulk stock item lists</span>
               </div>
             </div>
           )}
 
           {importStatus === "parsing" && (
             <div className="flex flex-col items-center justify-center py-10 space-y-4">
-              <LuLoader size={36} className="text-primary animate-spin" />
+              <LuLoader size={36} className="text-[var(--primary)] animate-spin" />
               <div className="text-center">
-                <p className="text-sm font-bold text-slate-800">Processing {fileName}...</p>
-                <p className="text-xs text-slate-400">Gemini is running extraction logic and updating database schemas...</p>
+                <p className="text-sm font-bold text-[var(--text-primary)]">Processing {fileName}...</p>
+                <p className="text-xs text-[var(--text-muted)]">Gemma is running extraction logic and updating database schemas...</p>
               </div>
             </div>
           )}
 
           {importStatus === "preview" && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              <div className="bg-amber-50/50 border border-amber-200/60 rounded-2xl p-4 flex items-center justify-between">
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-amber-500/15 border border-amber-500/30 rounded-2xl p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <LuFileText className="text-amber-600 animate-pulse" size={24} />
+                  <LuFileText className="text-amber-500 animate-pulse" size={24} />
                   <div>
-                    <h4 className="text-xs font-black uppercase text-amber-800 tracking-wider">Review Extracted Records</h4>
-                    <p className="text-[10px] text-slate-500 font-semibold">{fileName} parsed successfully.</p>
+                    <h4 className="text-xs font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider">Review Extracted Records</h4>
+                    <p className="text-[10px] text-[var(--text-muted)] font-semibold">{fileName} parsed successfully.</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setImportStatus("idle")}
-                  className="text-slate-400 hover:text-slate-600"
+                  className="text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
                 >
                   <LuX size={16} />
                 </button>
               </div>
 
-              {/* Data Table Preview */}
-              <div className="overflow-x-auto border border-slate-100 rounded-2xl">
+              <div className="overflow-x-auto border border-[var(--border-subtle)] rounded-2xl">
                 <table className="min-w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                    <tr className="bg-[var(--bg-subtle)] border-b border-[var(--border-subtle)] text-[10px] font-black uppercase tracking-wider text-[var(--text-muted)]">
                       <th className="p-4">Extracted Item</th>
                       <th className="p-4">Base Cost</th>
                       <th className="p-4">Quoted / Sell Price</th>
                       <th className="p-4">Supplier / Client</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-600 font-semibold">
+                  <tbody className="divide-y divide-[var(--border-subtle)] text-[var(--text-muted)] font-semibold">
                     {previewData.materials.map((mat, idx) => (
                       <tr key={`mat-${idx}`}>
-                        <td className="p-4 font-bold text-slate-800">{mat.name}</td>
+                        <td className="p-4 font-bold text-[var(--text-primary)]">{mat.name}</td>
                         <td className="p-4">₹{mat.currentCost}/unit</td>
                         <td className="p-4">₹{mat.marketCost}/unit</td>
                         <td className="p-4">{mat.supplier}</td>
@@ -173,9 +170,9 @@ export default function DataImportPanel({ onDataImported }: DataImportPanelProps
                     ))}
                     {previewData.orders.map((ord, idx) => (
                       <tr key={`ord-${idx}`}>
-                        <td className="p-4 font-bold text-slate-800">Order ID: {ord.id}</td>
+                        <td className="p-4 font-bold text-[var(--text-primary)]">Order ID: {ord.id}</td>
                         <td className="p-4">Margin Check</td>
-                        <td className="p-4 text-emerald-600">{ord.margin}</td>
+                        <td className="p-4 text-emerald-600 dark:text-emerald-400">{ord.margin}</td>
                         <td className="p-4">{ord.client}</td>
                       </tr>
                     ))}
@@ -183,17 +180,16 @@ export default function DataImportPanel({ onDataImported }: DataImportPanelProps
                 </table>
               </div>
 
-              {/* Confirm CTAs */}
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setImportStatus("idle")}
-                  className="btn-secondary py-2 px-6 text-xs cursor-pointer"
+                  className="px-4 py-2 bg-[var(--bg-subtle)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] text-xs font-bold rounded-full transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmImport}
-                  className="btn-primary py-2 px-6 text-xs cursor-pointer"
+                  className="px-5 py-2 bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white text-xs font-bold rounded-full transition-colors shadow-xs cursor-pointer"
                 >
                   Ground Database Records
                 </button>
@@ -203,12 +199,12 @@ export default function DataImportPanel({ onDataImported }: DataImportPanelProps
 
           {importStatus === "error" && (
             <div className="space-y-4 py-6 text-center">
-              <div className="text-red-500 font-bold text-xs p-4 bg-red-50 border border-red-100 rounded-2xl">
+              <div className="text-rose-500 font-bold text-xs p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl">
                 {errorMessage}
               </div>
               <button
                 onClick={() => setImportStatus("idle")}
-                className="btn-secondary py-2 px-6 text-xs cursor-pointer"
+                className="px-5 py-2 bg-[var(--bg-subtle)] text-[var(--text-primary)] text-xs font-bold rounded-full cursor-pointer"
               >
                 Try Again
               </button>
@@ -217,12 +213,12 @@ export default function DataImportPanel({ onDataImported }: DataImportPanelProps
 
           {importStatus === "success" && (
             <div className="flex flex-col items-center justify-center py-8 space-y-3">
-              <div className="h-10 w-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-sm">
+              <div className="h-10 w-10 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xs">
                 <LuCheck size={20} />
               </div>
               <div className="text-center">
-                <p className="text-sm font-bold text-slate-800">Data Grounded Successfully!</p>
-                <p className="text-xs text-slate-400">PostgreSQL models updated. Dashboard metrics reloading...</p>
+                <p className="text-sm font-bold text-[var(--text-primary)]">Data Grounded Successfully!</p>
+                <p className="text-xs text-[var(--text-muted)]">PostgreSQL models updated. Dashboard metrics reloading...</p>
               </div>
             </div>
           )}

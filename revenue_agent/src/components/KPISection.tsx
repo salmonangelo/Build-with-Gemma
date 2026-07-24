@@ -1,7 +1,5 @@
 import React from 'react';
 import { 
-  TrendingUp, 
-  TrendingDown, 
   DollarSign, 
   Cpu, 
   ShieldAlert, 
@@ -24,7 +22,7 @@ export const KPISection: React.FC<KPISectionProps> = ({ data }) => {
   };
 
   const formatDifference = (value: number) => {
-    const absVal = Math.abs(value * 100000); // convert lakh to rupees
+    const absVal = Math.abs(value * 100000);
     const formatted = absVal.toLocaleString('en-IN', { maximumFractionDigits: 0 });
     return value < 0 ? `-₹${formatted}` : `+₹${formatted}`;
   };
@@ -35,7 +33,7 @@ export const KPISection: React.FC<KPISectionProps> = ({ data }) => {
     : -8;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       {/* 1. Avg Monthly Revenue */}
       <StatCard
         label="Avg Monthly Revenue"
@@ -84,11 +82,11 @@ export const KPISection: React.FC<KPISectionProps> = ({ data }) => {
           isUp: diffVal >= 0
         }}
       >
-        <div className="flex flex-col gap-0.5 mt-2 border-t border-border-subtle pt-2 text-[9px]">
-          <span className="font-semibold text-text-muted">Primary Risk Drivers:</span>
+        <div className="flex flex-col gap-0.5 mt-2 border-t border-[var(--border-subtle)] pt-2 text-[9px]">
+          <span className="font-semibold text-[var(--text-muted)]">Primary Risk Drivers:</span>
           <div className="flex flex-wrap gap-1 mt-1">
-            <span className="px-1.5 py-0.5 bg-background border border-border-subtle text-text-muted rounded-[6px] text-[8px] font-bold">Steel Index</span>
-            <span className="px-1.5 py-0.5 bg-background border border-border-subtle text-text-muted rounded-[6px] text-[8px] font-bold">Payment Delays</span>
+            <span className="px-1.5 py-0.5 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--text-muted)] rounded-[6px] text-[8px] font-bold">Steel Index</span>
+            <span className="px-1.5 py-0.5 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--text-muted)] rounded-[6px] text-[8px] font-bold">Payment Delays</span>
           </div>
         </div>
       </StatCard>
@@ -100,19 +98,19 @@ export const KPISection: React.FC<KPISectionProps> = ({ data }) => {
         subtext={`Score: ${kpis.business_risk_score}/100`}
         icon={AlertTriangle}
       >
-        <div className="flex flex-col gap-2 mt-3 border-t border-border-subtle pt-2">
+        <div className="flex flex-col gap-2 mt-3 border-t border-[var(--border-subtle)] pt-2">
           <div className="flex justify-between items-center text-[10px]">
-            <span className="text-text-muted font-bold flex items-center gap-1">
+            <span className="text-[var(--text-muted)] font-bold flex items-center gap-1">
               <CheckCircle2 size={11} className="text-emerald-500" />
               AI Conf:
             </span>
-            <span className="font-extrabold text-slate-800">{kpis.confidence_pct}%</span>
+            <span className="font-extrabold text-[var(--text-primary)]">{kpis.confidence_pct}%</span>
           </div>
-          <div className="flex flex-col gap-1 text-[9px] text-text-muted">
+          <div className="flex flex-col gap-1 text-[9px] text-[var(--text-muted)]">
             {kpis.risk_factors.slice(0, 2).map((factor, i) => (
-              <div key={i} className="flex justify-between border-t border-slate-50 pt-1">
+              <div key={i} className="flex justify-between border-t border-[var(--border-subtle)] pt-1">
                 <span className="truncate max-w-[80px]">{factor.factor}</span>
-                <span className="font-bold text-text-foreground">{factor.score}%</span>
+                <span className="font-bold text-[var(--text-primary)]">{factor.score}%</span>
               </div>
             ))}
           </div>
@@ -121,4 +119,5 @@ export const KPISection: React.FC<KPISectionProps> = ({ data }) => {
     </div>
   );
 };
+
 export default KPISection;

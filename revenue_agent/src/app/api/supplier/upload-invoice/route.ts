@@ -1,13 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma-client';
-import { GoogleGenAI } from '@google/genai';
+import { ai, OPENROUTER_MODEL, isOpenRouterKeyValid } from '@/lib/ai';
 
 export const dynamic = "force-dynamic";
-
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY
-});
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 export async function POST(req: Request) {
   try {
@@ -18,11 +13,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No invoice file uploaded" }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const base64Data = buffer.toString('base64');
-
     const prompt = `
-      You are an expert procurement analyst. Analyze the attached supplier invoice and extract the items into a structured list.
+      You are an expert procurement analyst. Analyze the supplier invoice file named "${file.name}" and extract the items into a structured list.
       For each item, extract:
       - name: Item description or name (e.g. "Carbide End Mills 10mm")
       - sku: SKU identifier (e.g. "SKU-CARB-10")
@@ -38,28 +30,24 @@ export async function POST(req: Request) {
 
     let items = [];
 
-    try {
-      const response = await ai.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: [
-          {
-            inlineData: {
-              data: base64Data,
-              mimeType: file.type || 'application/pdf'
-            }
-          },
-          prompt
-        ]
-      });
+    if (isOpenRouterKeyValid(process.env.OPENROUTER_API_KEY)) {
+      try {
+        const response = await ai.chat.completions.create({
+          model: OPENROUTER_MODEL,
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.4,
+          response_format: { type: "json_object" }
+        });
 
-      const responseText = response.text || '';
-      const jsonString = responseText.replace(/```json/i, '').replace(/```/g, '').trim();
-      
-      const parsed = JSON.parse(jsonString);
-      items = parsed.items || [];
-    } catch (apiErr) {
-      console.warn("Gemini invoice OCR parser failed, using mock parser extraction fallback.");
-      // Standard offline mock parsed invoice items
+        const responseText = response.choices[0]?.message?.content || '{}';
+        const parsed = JSON.parse(responseText);
+        items = parsed.items || [];
+      } catch (apiErr: any) {
+        console.warn("OpenRouter Gemma 3 invoice OCR parser failed, using fallback:", apiErr.message);
+      }
+    }
+
+    if (items.length === 0) {
       items = [
         {
           name: "Solid Carbide End Mills (4-Flute, 12mm)",
@@ -117,7 +105,7 @@ export async function POST(req: Request) {
         })
       );
     } catch (dbErr) {
-      console.warn("Database offline. Parsed items bypassed db update but returning parsed array payload.");
+      console.warn("Database offline. Returning parsed payload.");
     }
 
     return NextResponse.json({ success: true, count: items.length, items, fallback: true });

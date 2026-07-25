@@ -1,10 +1,11 @@
 "use client";
 
 import React from "react";
-import { Menu, Bell, Settings, RefreshCw, Upload } from "lucide-react";
+import { MessageSquare, Menu, Bell, Settings, RefreshCw, Upload } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { TierSelector } from "@/components/TierSelector";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useExecutiveContext } from "@/context/ExecutiveContextProvider";
 
 export interface TopHeaderProps {
   title?: string;
@@ -28,6 +29,13 @@ export default function TopHeader({
   loading = false,
 }: TopHeaderProps) {
   const { theme } = useTheme();
+  let setWhatsAppModalOpen: ((open: boolean) => void) | undefined;
+  try {
+    const ctx = useExecutiveContext();
+    setWhatsAppModalOpen = ctx.setWhatsAppModalOpen;
+  } catch {
+    // Context fallback
+  }
 
   return (
     <header className="sticky top-0 z-20 h-16 bg-[var(--bg-card)]/90 backdrop-blur-md border-b border-[var(--border-subtle)] px-4 md:px-6 flex items-center justify-between transition-colors shadow-xs">
@@ -60,6 +68,17 @@ export default function TopHeader({
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+        {setWhatsAppModalOpen && (
+          <button
+            onClick={() => setWhatsAppModalOpen!(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-bold transition-all shadow-xs cursor-pointer"
+            title="Open WhatsApp Business Input Simulator"
+          >
+            <MessageSquare size={13} />
+            <span className="hidden sm:inline">WhatsApp</span>
+          </button>
+        )}
+
         <div className="hidden sm:block">
           <TierSelector />
         </div>

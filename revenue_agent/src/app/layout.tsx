@@ -4,6 +4,7 @@ import "./globals.css";
 import { BusinessDataProvider } from "@/context/BusinessDataContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { OnboardingProvider } from "@/context/OnboardingContext";
+import { ExecutiveContextProvider } from "@/context/ExecutiveContextProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -33,7 +34,9 @@ export default function RootLayout({
         <ThemeProvider>
           <OnboardingProvider>
             <BusinessDataProvider>
-              {children}
+              <ExecutiveContextProvider>
+                {children}
+              </ExecutiveContextProvider>
             </BusinessDataProvider>
           </OnboardingProvider>
         </ThemeProvider>

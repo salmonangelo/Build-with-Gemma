@@ -13,6 +13,7 @@ export class AIService {
    * Generates a text or structured JSON completion using the local Ollama provider layer.
    */
   static async generateCompletion(prompt: string, isJson: boolean = false): Promise<string> {
+    console.log(`🤖 [AIService] Sending prompt to Ollama (${OLLAMA_MODEL}) at ${OLLAMA_BASE_URL}...`);
     const options: any = {
       model: OLLAMA_MODEL,
       messages: [{ role: "user", content: prompt }],
@@ -29,6 +30,7 @@ export class AIService {
       if (!text) {
         throw new Error("Ollama returned an empty response.");
       }
+      console.log(`✅ [AIService] Received live response from ${OLLAMA_MODEL} (${text.length} chars)`);
       return text;
     } catch (error: any) {
       if (error.code === 'ECONNREFUSED' || error.message?.includes('fetch failed')) {
@@ -44,6 +46,7 @@ export class AIService {
    * Generates a conversational chat response using chat history.
    */
   static async generateChatCompletion(messages: Array<{ role: string; content: string }>): Promise<string> {
+    console.log(`🤖 [AIService] Chat request with ${messages.length} messages -> Ollama (${OLLAMA_MODEL})...`);
     try {
       const response = await ai.chat.completions.create({
         model: OLLAMA_MODEL,
@@ -58,6 +61,7 @@ export class AIService {
       if (!text) {
         throw new Error("Ollama returned an empty chat response.");
       }
+      console.log(`✅ [AIService] Received live chat response from ${OLLAMA_MODEL} (${text.length} chars)`);
       return text;
     } catch (error: any) {
       if (error.code === 'ECONNREFUSED' || error.message?.includes('fetch failed')) {

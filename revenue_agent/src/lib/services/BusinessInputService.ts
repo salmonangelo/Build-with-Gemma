@@ -1,6 +1,8 @@
 import { BusinessEventBus, BusinessEvent } from '../events/BusinessEventBus';
 import { prisma } from '../prisma-client';
 import { AIService } from '../ai';
+import { isTrustedAdvisorySender } from '../config/trustedContacts';
+import { AdvisoryParserService } from './AdvisoryParserService';
 
 export interface ProcessInputResult {
   reply: string;
@@ -16,6 +18,69 @@ export class BusinessInputService {
     const text = messageText.trim();
     const lower = text.toLowerCase();
     const timeStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    // 0. SENDER CHECK: TRUSTED ADVISORY AGENT / MARKET INTELLIGENCE INGESTION
+    const isAdvisoryMsg = isTrustedAdvisorySender(senderName) || lower.startsWith("[advisory]") || lower.includes("advisory agent");
+
+    if (isAdvisoryMsg) {
+      console.log(`📡 [Advisory Ingestion] Received trusted market update from ${senderName}: "${text}"`);
+      
+      const parseResult = await AdvisoryParserService.parseAdvisoryMessage(text);
+      let dbRecord: any = null;
+
+      try {
+        dbRecord = await prisma.marketSignal.create({
+          data: {
+            title: parseResult.headline,
+            category: parseResult.category,
+            impact: parseResult.summary,
+            action: `Review ${parseResult.recommendedImpact} Workspace parameters`,
+            material: parseResult.affectedMaterial,
+            date: new Date()
+          }
+        });
+      } catch {
+        dbRecord = { id: Date.now(), ...parseResult };
+      }
+
+      // Map event type based on extracted category
+      let eventType: BusinessEvent['type'] = 'MarketSignalDetected';
+      let deepLink = '/market-intelligence';
+
+      if (parseResult.category === 'CommodityPrice') {
+        eventType = 'CommodityPriceUpdated';
+        deepLink = '/pricing-agent';
+      } else if (parseResult.category === 'SupplierDelay' || parseResult.category === 'SupplyRisk') {
+        eventType = 'SupplierUpdated';
+        deepLink = '/supplier-agent';
+      } else if (parseResult.category === 'IndustryOpportunity') {
+        eventType = 'MarketSignalDetected';
+        deepLink = '/what-if-simulator';
+      }
+
+      // Emit Business Event to AI CTO Bus if confidence >= 0.70
+      let event: BusinessEvent | undefined = undefined;
+      if (parseResult.confidence >= 0.70) {
+        event = {
+          id: `evt-adv-${Date.now()}`,
+          type: eventType,
+          timestamp: timeStr,
+          source: 'WhatsApp',
+          summary: `AI Advisory Agent: ${parseResult.headline} (${parseResult.change})`,
+          details: parseResult,
+          deepLink
+        };
+        BusinessEventBus.publish(event);
+      }
+
+      if (parseResult.confidence >= 0.70) {
+        const reply = `✅ *Market intelligence received.*\n\nThe AI CTO has synchronized the update.\nPricing and executive recommendations have been refreshed.`;
+        return { reply, event, data: dbRecord };
+      } else {
+        const reply = `⚠️ *Market intelligence logged (Confidence ${Math.round(parseResult.confidence * 100)}%).*\n\nFlagged as 'Needs Review' for Executive approval before re-indexing.`;
+        return { reply, data: dbRecord };
+      }
+    }
 
     // 1. COMMAND: INVOICE LOGGING (e.g. "Here is today's supplier invoice...")
     if (lower.includes("invoice") || lower.includes("bill") || lower.includes("supplier invoice")) {
@@ -34,14 +99,12 @@ export class BusinessInputService {
         amount = 28500;
       }
 
-      // Try parsing numeric amount if present
       const amtMatch = text.match(/(?:rs\.?|inr|₹)?\s*(\d+(?:,\d+)*(?:\.\d+)?)/i);
       if (amtMatch) {
         const parsedAmt = parseFloat(amtMatch[1].replace(/,/g, ''));
         if (!isNaN(parsedAmt) && parsedAmt > 0) amount = parsedAmt;
       }
 
-      // Save to Prisma database if available, or construct record
       let invoiceRecord: any = null;
       try {
         invoiceRecord = await prisma.supplierInvoice.create({
@@ -57,7 +120,6 @@ export class BusinessInputService {
         invoiceRecord = { id: Date.now(), supplierName, materialName, amount, dueDate, status: "Pending" };
       }
 
-      // Emit Business Event
       const event: BusinessEvent = {
         id: `evt-${Date.now()}`,
         type: 'InvoiceLogged',

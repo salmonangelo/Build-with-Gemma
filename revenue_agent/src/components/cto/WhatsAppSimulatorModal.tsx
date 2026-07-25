@@ -25,12 +25,13 @@ export const WhatsAppSimulatorModal: React.FC = () => {
 
   if (!isWhatsAppModalOpen) return null;
 
-  const handleSend = async (customText?: string) => {
+  const handleSend = async (customText?: string, customSender?: string) => {
     const textToSend = customText || input;
     if (!textToSend.trim()) return;
 
     const timeStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-    setMessages(prev => [...prev, { sender: 'user', text: textToSend, time: timeStr }]);
+    const senderDisplayName = customSender || 'Factory Leadership';
+    setMessages(prev => [...prev, { sender: 'user', text: `[${senderDisplayName}] ${textToSend}`, time: timeStr }]);
     if (!customText) setInput('');
     setLoading(true);
 
@@ -38,7 +39,7 @@ export const WhatsAppSimulatorModal: React.FC = () => {
       const res = await fetch('/api/whatsapp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: textToSend })
+        body: JSON.stringify({ message: textToSend, sender: senderDisplayName })
       });
       const data = await res.json();
 
@@ -82,6 +83,24 @@ export const WhatsAppSimulatorModal: React.FC = () => {
         {/* Quick Command Suggestions */}
         <div className="p-2.5 bg-[var(--bg-subtle)] border-b border-[var(--border-subtle)] flex items-center gap-2 overflow-x-auto scrollbar-none text-[10px]">
           <button 
+            onClick={() => handleSend("Steel prices increased by 7%", "AI Advisory Agent")}
+            className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-black shrink-0 cursor-pointer"
+          >
+            🤖 Advisory: Steel +7%
+          </button>
+          <button 
+            onClick={() => handleSend("Port strike expected next week", "AI Advisory Agent")}
+            className="px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600 border border-purple-500/20 font-black shrink-0 cursor-pointer"
+          >
+            🤖 Advisory: Port Strike
+          </button>
+          <button 
+            onClick={() => handleSend("Import duty increased to 12%", "AI Advisory Agent")}
+            className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20 font-black shrink-0 cursor-pointer"
+          >
+            🤖 Advisory: Duty +12%
+          </button>
+          <button 
             onClick={() => handleSend("Here is today's supplier invoice from Peenya Steel for ₹45,000")}
             className="px-2.5 py-1 rounded-full bg-[var(--bg-card)] border border-[var(--border-subtle)] font-bold text-[var(--text-primary)] hover:border-[var(--primary)] shrink-0 cursor-pointer"
           >
@@ -92,12 +111,6 @@ export const WhatsAppSimulatorModal: React.FC = () => {
             className="px-2.5 py-1 rounded-full bg-[var(--bg-card)] border border-[var(--border-subtle)] font-bold text-[var(--text-primary)] hover:border-[var(--primary)] shrink-0 cursor-pointer"
           >
             💰 Query Debt
-          </button>
-          <button 
-            onClick={() => handleSend("Steel increased by 8% in Peenya cluster")}
-            className="px-2.5 py-1 rounded-full bg-[var(--bg-card)] border border-[var(--border-subtle)] font-bold text-[var(--text-primary)] hover:border-[var(--primary)] shrink-0 cursor-pointer"
-          >
-            📈 Log Steel Hike (+8%)
           </button>
         </div>
 

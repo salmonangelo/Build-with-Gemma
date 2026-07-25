@@ -1,24 +1,33 @@
 import { NextResponse } from 'next/server';
-import { BusinessInputService } from '@/lib/services/BusinessInputService';
+import { ConversationService } from '@/lib/services/ConversationService';
 
 export const dynamic = "force-dynamic";
+
+export async function GET() {
+  try {
+    const session = ConversationService.getSession();
+    return NextResponse.json({ success: true, session });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const message = body.message || body.text || body.content || "";
-    const sender = body.sender || "Factory Leadership";
+    const sender = body.sender || "WhatsApp Contact";
 
     if (!message) {
       return NextResponse.json({ error: "Message content is required" }, { status: 400 });
     }
 
-    const result = await BusinessInputService.processWhatsAppInput(message, sender);
+    const result = await ConversationService.handleIncomingMessage('WhatsApp', sender, message);
+
     return NextResponse.json({
       success: true,
       reply: result.reply,
-      event: result.event || null,
-      data: result.data || null
+      session: result.session
     });
   } catch (error: any) {
     console.error("Failed to process WhatsApp API request:", error);

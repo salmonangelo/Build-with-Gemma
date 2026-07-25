@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { queryAIAnalyst } from '../services/api';
 import type { DashboardData } from '../services/api';
+import { WhatsAppContinuationBanner } from './chat/WhatsAppContinuationBanner';
+import { ContinueOnWhatsAppButton } from './chat/ContinueOnWhatsAppButton';
 
 interface Message {
   id: string;
@@ -123,6 +125,13 @@ How can I assist you today?`
           </button>
         </div>
 
+        {/* Omnichannel Continuation Banner */}
+        <div className="px-4 pt-3">
+          <WhatsAppContinuationBanner 
+            lastWhatsAppMsg={messages[messages.length - 1]?.text}
+          />
+        </div>
+
         {/* Chat History */}
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-[var(--bg-app)]">
           {messages.map((m) => (
@@ -182,6 +191,11 @@ How can I assist you today?`
             </div>
           )}
           
+          {/* Continue on WhatsApp Button */}
+          <ContinueOnWhatsAppButton 
+            lastMessage={messages[messages.length - 1]?.text}
+          />
+
           <div className="flex gap-2">
             <input
               type="text"

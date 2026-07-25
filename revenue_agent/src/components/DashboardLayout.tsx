@@ -15,6 +15,7 @@ import { TopHeader } from '@/components/TopHeader';
 import { AIAnalystChat } from '@/components/AIAnalystChat';
 import { OnboardingWizardModal } from '@/components/onboarding/OnboardingWizardModal';
 import { BeginnerHome } from '@/components/beginner/BeginnerHome';
+import { WhatsAppSimulatorModal } from '@/components/cto/WhatsAppSimulatorModal';
 import { useBusinessData } from '@/context/BusinessDataContext';
 import { useOnboarding } from '@/context/OnboardingContext';
 
@@ -180,8 +181,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, acti
         </div>
       )}
 
-      {/* Onboarding Wizard Modal */}
+      {/* Onboarding Wizard Modal & WhatsApp Simulator Modal */}
       <OnboardingWizardModal />
+      <WhatsAppSimulatorModal />
     </div>
   );
 };

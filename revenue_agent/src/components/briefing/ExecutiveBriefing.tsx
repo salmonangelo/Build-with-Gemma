@@ -11,7 +11,6 @@ import {
 import { BusinessSnapshotBar } from './BusinessSnapshotBar';
 import { CriticalDecisionsSection } from './CriticalDecisionsSection';
 import { BusinessTimelineFeed } from '../cto/BusinessTimelineFeed';
-import { WhatsAppSimulatorModal } from '../cto/WhatsAppSimulatorModal';
 import { useBusinessData } from '@/context/BusinessDataContext';
 
 export const ExecutiveBriefing: React.FC = () => {
@@ -23,7 +22,6 @@ export const ExecutiveBriefing: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">
-      <WhatsAppSimulatorModal />
       
       {/* 1. EXECUTIVE BRIEFING HERO BANNER */}
       <div className="relative overflow-hidden p-6 md:p-8 rounded-3xl bg-gradient-to-br from-[var(--bg-card)] via-[var(--bg-card)] to-[var(--primary-subtle)]/20 border border-[var(--border-subtle)] shadow-sm space-y-4">

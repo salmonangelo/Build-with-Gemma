@@ -33,7 +33,7 @@ export const BusinessTimelineFeed: React.FC = () => {
       <div className="flex items-center justify-between">
         <h3 className="font-display font-black text-sm sm:text-base text-[var(--text-primary)] flex items-center gap-2">
           <LuHistory size={18} className="text-[var(--primary)] animate-pulse" />
-          <span>📜 Business Timeline (Live Input Channel Stream)</span>
+          <span>Business Timeline (Live Input Channel Stream)</span>
         </h3>
         <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
           WhatsApp & Inputs Connected

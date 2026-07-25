@@ -74,10 +74,10 @@ export class BusinessInputService {
       }
 
       if (parseResult.confidence >= 0.70) {
-        const reply = `✅ *Market intelligence received.*\n\nThe AI CTO has synchronized the update.\nPricing and executive recommendations have been refreshed.`;
+        const reply = `*Market intelligence received.*\n\nThe AI CTO has synchronized the update.\nPricing and executive recommendations have been refreshed.`;
         return { reply, event, data: dbRecord };
       } else {
-        const reply = `⚠️ *Market intelligence logged (Confidence ${Math.round(parseResult.confidence * 100)}%).*\n\nFlagged as 'Needs Review' for Executive approval before re-indexing.`;
+        const reply = `*Market intelligence logged (Confidence ${Math.round(parseResult.confidence * 100)}%).*\n\nFlagged as 'Needs Review' for Executive approval before re-indexing.`;
         return { reply, data: dbRecord };
       }
     }
@@ -131,7 +131,7 @@ export class BusinessInputService {
       };
       BusinessEventBus.publish(event);
 
-      const reply = `🎉 *Invoice Logged Directly to Database!*\n\n🏢 *Supplier:* ${supplierName}\n🛠️ *Material:* ${materialName}\n💰 *Amount:* ₹${amount.toLocaleString('en-IN')}\n📅 *Due Date:* ${dueDate}\n\n*AI CTO Update:* Cash flow projection & supplier balance updated automatically.`;
+      const reply = `*Invoice Logged Directly to Database*\n\nSupplier: ${supplierName}\nMaterial: ${materialName}\nAmount: ₹${amount.toLocaleString('en-IN')}\nDue Date: ${dueDate}\n\n*AI CTO Update:* Cash flow projection & supplier balance updated automatically.`;
       return { reply, event, data: invoiceRecord };
     }
 
@@ -148,7 +148,7 @@ export class BusinessInputService {
       };
       BusinessEventBus.publish(event);
 
-      const reply = `📊 *Supplier Ledger Query Result*\n\n🏢 *Supplier:* Peenya Steel Stockyard\n💰 *Outstanding Balance:* ₹1,45,000\n📅 *Next Payment Due:* 28 Jul 2026\nStatus: 1 Pending Invoice\n\n*AI CTO Advice:* Cash buffer is healthy for this week.`;
+      const reply = `*Supplier Ledger Query Result*\n\nSupplier: Peenya Steel Stockyard\nOutstanding Balance: ₹1,45,000\nNext Payment Due: 28 Jul 2026\nStatus: 1 Pending Invoice\n\n*AI CTO Advice:* Cash buffer is healthy for this week.`;
       return { reply, event };
     }
 
@@ -165,7 +165,7 @@ export class BusinessInputService {
       };
       BusinessEventBus.publish(event);
 
-      const reply = `⚠️ *Material Cost Hike Logged!*\n\n📈 *Reported Signal:* ${text}\n🏷️ *Affected Contracts:* CNC Machining Job Work (Auto Ancillary)\n🎯 *AI CTO Recommendation:* Surcharge adjustment (+4.8%) queued on Morning Briefing.`;
+      const reply = `*Material Cost Hike Logged*\n\nReported Signal: ${text}\nAffected Contracts: CNC Machining Job Work (Auto Ancillary)\nAI CTO Recommendation: Surcharge adjustment (+4.8%) queued on Morning Briefing.`;
       return { reply, event };
     }
 
@@ -182,7 +182,7 @@ export class BusinessInputService {
       };
       BusinessEventBus.publish(event);
 
-      const reply = `📢 *Collections Outreach Generated!*\n\n🏢 *Customer:* ABC Industries\n💰 *Overdue Amount:* ₹3,80,000 (38 days overdue)\n\n*WhatsApp Draft:* "Dear ABC Industries team, Invoice #INV-882 is 38 days overdue. Kindly advise payment transaction reference today."`;
+      const reply = `*Collections Outreach Generated*\n\nCustomer: ABC Industries\nOverdue Amount: ₹3,80,000 (38 days overdue)\n\n*Outreach Draft:* "Dear ABC Industries team, Invoice #INV-882 is 38 days overdue. Kindly advise payment transaction reference today."`;
       return { reply, event };
     }
 

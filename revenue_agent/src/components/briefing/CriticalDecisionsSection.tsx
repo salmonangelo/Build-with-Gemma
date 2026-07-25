@@ -24,12 +24,12 @@ export const CriticalDecisionsSection: React.FC<CriticalDecisionsSectionProps> =
   return (
     <div className="space-y-8">
       
-      {/* 🚨 SECTION 1: CRITICAL DECISIONS */}
+      {/* SECTION 1: CRITICAL DECISIONS */}
       <div className="space-y-4">
         <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2">
           <h3 className="font-display font-black text-sm sm:text-base text-rose-500 flex items-center gap-2">
             <LuShieldAlert size={18} className="animate-pulse" />
-            <span>🚨 Critical Decisions (Requires Immediate Approval)</span>
+            <span>Critical Decisions (Requires Immediate Approval)</span>
           </h3>
           <span className="text-[10px] font-black uppercase tracking-wider text-[var(--text-muted)] bg-rose-500/10 text-rose-500 px-2.5 py-0.5 rounded-full border border-rose-500/20">
             2 Urgent Actions
@@ -130,12 +130,12 @@ export const CriticalDecisionsSection: React.FC<CriticalDecisionsSectionProps> =
       </div>
 
 
-      {/* ⚠️ SECTION 2: NEEDS ATTENTION */}
+      {/* SECTION 2: NEEDS ATTENTION */}
       <div className="space-y-4">
         <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2">
           <h3 className="font-display font-black text-sm sm:text-base text-amber-500 flex items-center gap-2">
             <LuShieldAlert size={18} />
-            <span>⚠️ Needs Attention (Operational & Supplier Alerts)</span>
+            <span>Needs Attention (Operational & Supplier Alerts)</span>
           </h3>
           <span className="text-[10px] font-black uppercase tracking-wider text-[var(--text-muted)] bg-amber-500/10 text-amber-500 px-2.5 py-0.5 rounded-full border border-amber-500/20">
             2 Alerts
@@ -198,12 +198,12 @@ export const CriticalDecisionsSection: React.FC<CriticalDecisionsSectionProps> =
       </div>
 
 
-      {/* 📈 SECTION 3: OPPORTUNITIES */}
+      {/* SECTION 3: OPPORTUNITIES */}
       <div className="space-y-4">
         <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2">
           <h3 className="font-display font-black text-sm sm:text-base text-emerald-500 flex items-center gap-2">
             <LuTrendingUp size={18} />
-            <span>📈 Strategic Opportunities (Expansion & Savings)</span>
+            <span>Strategic Opportunities (Expansion & Savings)</span>
           </h3>
         </div>
 

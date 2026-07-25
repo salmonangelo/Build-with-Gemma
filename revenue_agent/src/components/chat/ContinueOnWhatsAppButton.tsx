@@ -41,7 +41,7 @@ export const ContinueOnWhatsAppButton: React.FC<{ lastMessage?: string }> = ({ l
       ) : (
         <>
           <LuMessageSquare size={14} />
-          <span>📱 Continue this discussion on WhatsApp</span>
+          <span>Continue this discussion on WhatsApp</span>
         </>
       )}
     </button>

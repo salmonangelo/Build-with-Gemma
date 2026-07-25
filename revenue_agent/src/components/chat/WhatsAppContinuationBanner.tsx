@@ -20,7 +20,7 @@ export const WhatsAppContinuationBanner: React.FC<WhatsAppContinuationBannerProp
         </div>
         <div className="truncate">
           <span className="font-bold text-[10px] uppercase tracking-wider block text-emerald-800 dark:text-emerald-200">
-            📱 Continued from WhatsApp ({timestamp})
+            Continued from WhatsApp ({timestamp})
           </span>
           <p className="truncate font-medium text-xs text-emerald-900 dark:text-emerald-100">
             "{lastWhatsAppMsg}"

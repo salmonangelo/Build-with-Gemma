@@ -86,31 +86,31 @@ export const WhatsAppSimulatorModal: React.FC = () => {
             onClick={() => handleSend("Steel prices increased by 7%", "AI Advisory Agent")}
             className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-black shrink-0 cursor-pointer"
           >
-            🤖 Advisory: Steel +7%
+            Advisory: Steel +7%
           </button>
           <button 
             onClick={() => handleSend("Port strike expected next week", "AI Advisory Agent")}
             className="px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600 border border-purple-500/20 font-black shrink-0 cursor-pointer"
           >
-            🤖 Advisory: Port Strike
+            Advisory: Port Strike
           </button>
           <button 
             onClick={() => handleSend("Import duty increased to 12%", "AI Advisory Agent")}
             className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20 font-black shrink-0 cursor-pointer"
           >
-            🤖 Advisory: Duty +12%
+            Advisory: Duty +12%
           </button>
           <button 
             onClick={() => handleSend("Here is today's supplier invoice from Peenya Steel for ₹45,000")}
             className="px-2.5 py-1 rounded-full bg-[var(--bg-card)] border border-[var(--border-subtle)] font-bold text-[var(--text-primary)] hover:border-[var(--primary)] shrink-0 cursor-pointer"
           >
-            📄 Send Invoice (₹45K)
+            Send Invoice (₹45K)
           </button>
           <button 
             onClick={() => handleSend("How much do I owe Peenya Steel?")}
             className="px-2.5 py-1 rounded-full bg-[var(--bg-card)] border border-[var(--border-subtle)] font-bold text-[var(--text-primary)] hover:border-[var(--primary)] shrink-0 cursor-pointer"
           >
-            💰 Query Debt
+            Query Debt
           </button>
         </div>
 

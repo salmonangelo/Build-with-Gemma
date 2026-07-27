@@ -60,7 +60,8 @@ MESSAGE TO PARSE:
 
     try {
       const jsonText = await AIService.generateCompletion(prompt, true);
-      const data = JSON.parse(jsonText);
+      const data = AIService.safeParseJson<any>(jsonText, {});
+
 
       const confidence = typeof data.confidence === 'number' ? data.confidence : 0.85;
       const status: 'Active' | 'Needs Review' = confidence >= 0.70 ? 'Active' : 'Needs Review';

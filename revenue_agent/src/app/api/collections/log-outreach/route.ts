@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma-client';
+import { CapabilityRegistryInstance } from '@/lib/tools';
 
 export const dynamic = "force-dynamic";
-
-// In-memory fallback cache if PostgreSQL is unreachable
-let inMemoryOutreachLogs: any[] = [];
 
 export async function GET() {
   try {
@@ -13,7 +11,7 @@ export async function GET() {
     });
     return NextResponse.json({ success: true, logs });
   } catch (err) {
-    return NextResponse.json({ success: true, logs: inMemoryOutreachLogs });
+    return NextResponse.json({ success: true, logs: [] });
   }
 }
 
@@ -25,27 +23,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing log details" }, { status: 400 });
     }
 
-    const newLog = {
+    const result = await CapabilityRegistryInstance.executeTool('log_collection_outreach', {
       client,
       channel,
       tone,
-      content,
-      sentAt: new Date()
-    };
+      content
+    }, {
+      source: 'WebUI',
+      initiatedBy: 'CollectionsManager'
+    });
 
-    try {
-      const saved = await prisma.outreachLog.create({
-        data: newLog
-      });
-      return NextResponse.json({ success: true, log: saved });
-    } catch (dbErr) {
-      // Fallback to in-memory array if database is unreachable
-      const fallbackLog = { id: inMemoryOutreachLogs.length + 1, ...newLog };
-      inMemoryOutreachLogs.unshift(fallbackLog);
-      return NextResponse.json({ success: true, log: fallbackLog, fallback: true });
+    if (!result.success || !result.data) {
+      return NextResponse.json({ error: result.error || "Failed to log outreach" }, { status: 500 });
     }
+
+    return NextResponse.json({ success: true, log: result.data });
   } catch (error: any) {
     console.error("Failed to log outreach:", error);
     return NextResponse.json({ error: "Failed to log outreach: " + error.message }, { status: 500 });
   }
 }
+

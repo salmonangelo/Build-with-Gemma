@@ -2,12 +2,12 @@
 
 import React from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { ExecutiveBriefing } from "@/components/briefing/ExecutiveBriefing";
+import { ExecutiveControlRoom } from "@/components/control-room/ExecutiveControlRoom";
 
 export default function Home() {
   return (
     <DashboardLayout activeRoute="/">
-      <ExecutiveBriefing />
+      <ExecutiveControlRoom />
     </DashboardLayout>
   );
 }

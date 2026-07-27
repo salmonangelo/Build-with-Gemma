@@ -228,14 +228,19 @@ export function runPythonAnalysis(filePath: string, ordersMult = 1.0, steelMult 
     if (delayMod !== 0.0) command += ` --delay-mod ${delayMod}`;
     if (utilMult !== 1.0) command += ` --util-mult ${utilMult}`;
     
-    exec(command, (error, stdout, stderr) => {
+    exec(command, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
       if (error) {
-        console.error("Python subprocess error:", stderr);
-        return reject(error);
+        console.error("Python subprocess error stderr:", stderr);
       }
       try {
-        const result = JSON.parse(stdout);
-        resolve(result);
+        const jsonStart = stdout.indexOf('{');
+        const jsonEnd = stdout.lastIndexOf('}');
+        if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+          const jsonString = stdout.substring(jsonStart, jsonEnd + 1);
+          const result = JSON.parse(jsonString);
+          return resolve(result);
+        }
+        reject(new Error(`No valid JSON output found in Python stdout. Raw output: ${stdout.slice(0, 200)}`));
       } catch (parseError) {
         console.error("Failed to parse Python output:", stdout);
         reject(parseError);
@@ -243,6 +248,7 @@ export function runPythonAnalysis(filePath: string, ordersMult = 1.0, steelMult 
     });
   });
 }
+
 
 export function parseCSVData(filePath: string) {
   try {
@@ -683,9 +689,17 @@ ${JSON.stringify({
 
   try {
     const text = await AIService.generateCompletion(prompt, true);
-    return JSON.parse(text);
+    const parsed = AIService.safeParseJson(text, null);
+    if (parsed) return parsed;
   } catch (error: any) {
     console.error("Gemma API Call failed. Creating mock reasoning fallback:", error.message);
+  }
+
+  return createFallbackReasoning();
+
+  function createFallbackReasoning() {
+
+
     
     // Scale fallback values depending on simulation parameters
     const ordersMult = simulationParams ? parseFloat(simulationParams.ordersMultiplier) : 1.0;

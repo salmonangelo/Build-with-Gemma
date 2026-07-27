@@ -27,13 +27,15 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
-    category: "Executive Briefing",
+    category: "AI Operations OS",
     items: [
+      { id: "operations", label: "Business Operations", href: "/operations", icon: "Layers" },
       { id: "dashboard", label: "Daily AI Briefing", href: "/", icon: "LayoutDashboard" }
     ]
   },
   {
     category: "Workspaces",
+
     items: [
       { id: "pricing-agent", label: "Pricing Workspace", href: "/pricing-agent", icon: "Coins" },
       { id: "revenue-intelligence", label: "Revenue Workspace", href: "/revenue-intelligence", icon: "TrendingUp" },

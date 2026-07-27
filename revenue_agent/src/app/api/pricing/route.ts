@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { CapabilityRegistryInstance } from '@/lib/tools';
 import { 
   getMaterials, 
   getOrders, 
@@ -8,6 +9,7 @@ import {
   getStructuralRisks,
   updateRecommendationStatus
 } from '@/app/pricing-agent/actions';
+
 
 export const dynamic = "force-dynamic";
 
@@ -130,14 +132,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
     }
 
-    try {
-      const updated = await updateRecommendationStatus(id, status === 'accept' ? 'accepted' : 'rejected');
-      return NextResponse.json({ success: true, updated });
-    } catch (dbErr) {
-      return NextResponse.json({ success: true, fallback: true });
+    const result = await CapabilityRegistryInstance.executeTool('update_pricing_recommendation', {
+      id,
+      status: status as 'accept' | 'reject'
+    }, {
+      source: 'WebUI',
+      initiatedBy: 'PricingManager'
+    });
+
+    if (!result.success) {
+      return NextResponse.json({ error: result.error || "Failed to update recommendation" }, { status: 500 });
     }
+
+    return NextResponse.json({ success: true, updated: result.data });
   } catch (error: any) {
     console.error("Failed to update pricing recommendation:", error);
     return NextResponse.json({ error: "Failed to update pricing recommendation: " + error.message }, { status: 500 });
   }
 }
+

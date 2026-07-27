@@ -1,0 +1,29 @@
+import { NextResponse } from 'next/server';
+import { OperationService } from '@/lib/operations/OperationService';
+import { ActionCenterService } from '@/lib/services/ActionCenterService';
+import { TimelineService } from '@/lib/services/TimelineService';
+import { WorkflowService } from '@/lib/workflows/WorkflowService';
+import { BusinessStoryEngine } from '@/lib/story/BusinessStoryEngine';
+
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  try {
+    const operations = await OperationService.getOperationsOverview();
+    const actionCenter = ActionCenterService.getActionCenterState();
+    const timeline = TimelineService.getExecutiveTimeline();
+    const workflows = WorkflowService.getRunningWorkflows();
+    const stories = BusinessStoryEngine.generateStories();
+
+    return NextResponse.json({
+      success: true,
+      operations,
+      actionCenter,
+      timeline,
+      workflows,
+      stories
+    });
+  } catch (error: any) {
+    return NextResponse.json({ error: "Failed to fetch operations: " + error.message }, { status: 500 });
+  }
+}

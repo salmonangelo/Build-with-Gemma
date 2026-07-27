@@ -49,14 +49,14 @@ Rather than presenting static analytics, FinCent continuously:
 ### 3. Business Operations OS Hub (`/operations`)
 *Unified operational command center listing 8 active domain worker nodes, running DAG graphs, and audit trails.*
 
-![Operations OS](docs/screenshots/operations-os.png)
+![Operations OS](docs/screenshots/operations.png)
 
 ---
 
 ### 4. Pricing & Margin Defense (`/pricing-agent`)
 *Defends product gross margin corridors against raw material price spikes with automated BOM surcharge pass-through.*
 
-![Pricing Defense](docs/screenshots/pricing-defense.png)
+![Pricing Defense](docs/screenshots/pricing_agent.png)
 
 ---
 

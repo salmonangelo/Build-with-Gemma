@@ -9,10 +9,57 @@ export const ai = new OpenAI({
 });
 
 export class AIService {
+  static cleanJsonText(text: string): string {
+    if (!text) return '{}';
+    let cleaned = text.trim();
+    cleaned = cleaned.replace(/^```(?:json)?\s*/gi, '').replace(/\s*```$/gi, '').trim();
+    const firstBrace = cleaned.indexOf('{');
+    if (firstBrace === -1) return '{}';
+    cleaned = cleaned.substring(firstBrace);
+    const lastBrace = cleaned.lastIndexOf('}');
+    if (lastBrace !== -1 && lastBrace > 0) {
+      cleaned = cleaned.substring(0, lastBrace + 1);
+    }
+    return cleaned;
+  }
+
+  static safeParseJson<T = any>(text: string, fallback: T): T {
+    try {
+      const cleaned = AIService.cleanJsonText(text);
+      return JSON.parse(cleaned) as T;
+    } catch (err: any) {
+      console.warn("⚠️ [AIService] Direct JSON parse failed, attempting auto-repair. Error:", err.message);
+      try {
+        let repaired = AIService.cleanJsonText(text);
+        if ((repaired.match(/"/g) || []).length % 2 !== 0) {
+          repaired += '"';
+        }
+        let openBraces = (repaired.match(/\{/g) || []).length;
+        let closeBraces = (repaired.match(/\}/g) || []).length;
+        while (openBraces > closeBraces) {
+          repaired += '}';
+          closeBraces++;
+        }
+        let openBrackets = (repaired.match(/\[/g) || []).length;
+        let closeBrackets = (repaired.match(/\]/g) || []).length;
+        while (openBrackets > closeBrackets) {
+          repaired += ']';
+          closeBrackets++;
+        }
+        return JSON.parse(repaired) as T;
+      } catch (repairErr: any) {
+        console.warn("⚠️ [AIService] Auto-repair failed. Returning safe fallback object.");
+        return fallback;
+      }
+    }
+  }
+
+
   /**
    * Generates a text or structured JSON completion using the local Ollama provider layer.
    */
   static async generateCompletion(prompt: string, isJson: boolean = false): Promise<string> {
+    console.log(`🤖 [AIService] Sending prompt to Ollama (${OLLAMA_MODEL}) at ${OLLAMA_BASE_URL}...`);
     const options: any = {
       model: OLLAMA_MODEL,
       messages: [{ role: "user", content: prompt }],
@@ -29,7 +76,8 @@ export class AIService {
       if (!text) {
         throw new Error("Ollama returned an empty response.");
       }
-      return text;
+      console.log(`✅ [AIService] Received live response from ${OLLAMA_MODEL} (${text.length} chars)`);
+      return isJson ? AIService.cleanJsonText(text) : text;
     } catch (error: any) {
       if (error.code === 'ECONNREFUSED' || error.message?.includes('fetch failed')) {
         console.warn(`[AIService] Ollama server unreachable at ${OLLAMA_BASE_URL}. Ensure 'ollama run ${OLLAMA_MODEL}' is active.`);
@@ -40,10 +88,12 @@ export class AIService {
     }
   }
 
+
   /**
    * Generates a conversational chat response using chat history.
    */
   static async generateChatCompletion(messages: Array<{ role: string; content: string }>): Promise<string> {
+    console.log(`🤖 [AIService] Chat request with ${messages.length} messages -> Ollama (${OLLAMA_MODEL})...`);
     try {
       const response = await ai.chat.completions.create({
         model: OLLAMA_MODEL,
@@ -58,6 +108,7 @@ export class AIService {
       if (!text) {
         throw new Error("Ollama returned an empty chat response.");
       }
+      console.log(`✅ [AIService] Received live chat response from ${OLLAMA_MODEL} (${text.length} chars)`);
       return text;
     } catch (error: any) {
       if (error.code === 'ECONNREFUSED' || error.message?.includes('fetch failed')) {

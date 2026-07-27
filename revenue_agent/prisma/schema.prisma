@@ -126,3 +126,94 @@ model Supplier {
   contactChannel    String
   sourceUrl         String
 }
+
+model WorkflowInstance {
+  id              String                  @id @default(cuid())
+  operationId     String
+  goalId          String?
+  workflowType    String
+  title           String
+  assignedWorker  String
+  status          String                  // "Created" | "Planning" | "Pending_Approval" | "Executing" | "Verifying" | "Completed" | "Failed" | "Cancelled"
+  currentStep     Int                     @default(0)
+  businessImpact  String?
+  expectedOutcome String?
+  contextSnapshot Json?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  steps           WorkflowStepExecution[]
+  auditLogs       WorkflowAuditLog[]
+  tasks           TaskInstance[]
+}
+
+model WorkflowStepExecution {
+  id                String           @id @default(cuid())
+  workflowId        String
+  workflow          WorkflowInstance @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  sequence          Int
+  name              String
+  toolId            String
+  inputParameters   Json
+  executionMode     String           // "Autonomous" | "Approval_Required" | "Manual"
+  status            String           // "Pending" | "Approved" | "Executing" | "Completed" | "Failed"
+  verificationState String?
+  outputResult      Json?
+  executedAt        DateTime?
+}
+
+model WorkflowAuditLog {
+  id            String           @id @default(cuid())
+  workflowId    String
+  workflow      WorkflowInstance @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  stepId        String?
+  timestamp     DateTime         @default(now())
+  actor         String           // "ExecutiveCTO" | "ProcurementWorker" | "FactoryOwner"
+  action        String
+  previousState String?
+  newState      String?
+  payload       Json?
+}
+
+model BusinessGoal {
+  id            String   @id @default(cuid())
+  name          String
+  category      String   // "MarginProtection" | "InventoryOptimization" | "ARReduction" | "RevenueGrowth"
+  targetMetric  String
+  currentMetric String
+  status        String   // "OnTrack" | "AtRisk" | "Achieved"
+  updatedAt     DateTime @default(now())
+}
+
+model TaskInstance {
+  id             String           @id @default(cuid())
+  workflowId     String
+  workflow       WorkflowInstance @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  title          String
+  assignedWorker String
+  priority       String           // "Low" | "Medium" | "High" | "Critical"
+  status         String           // "Pending" | "InProgress" | "Blocked" | "Completed"
+  businessImpact String?
+  deadline       DateTime?
+  createdAt      DateTime         @default(now())
+}
+
+model KnowledgeItem {
+  id          String   @id @default(cuid())
+  category    String   // "SOP" | "PricingRule" | "SupplierPolicy" | "ManufacturingProcedure"
+  title       String
+  content     String
+  tags        String   // comma-separated
+  lastUpdated DateTime @default(now())
+}
+
+model OperationState {
+  id             String   @id @default(cuid())
+  operationId    String   @unique // "procurement", "pricing", "revenue", etc.
+  name           String
+  status         String   // "Optimal" | "Attention_Required" | "Critical"
+  activeCount    Int      @default(0)
+  completedCount Int      @default(0)
+  kpis           Json
+  lastUpdated    DateTime @default(now())
+}
+

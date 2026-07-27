@@ -4,17 +4,20 @@ import "./globals.css";
 import { BusinessDataProvider } from "@/context/BusinessDataContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { OnboardingProvider } from "@/context/OnboardingContext";
+import { ExecutiveContextProvider } from "@/context/ExecutiveContextProvider";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
+  fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
 });
 
 const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
   variable: "--font-bricolage",
   display: "swap",
+  fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
 });
 
 export const metadata: Metadata = {
@@ -33,7 +36,9 @@ export default function RootLayout({
         <ThemeProvider>
           <OnboardingProvider>
             <BusinessDataProvider>
-              {children}
+              <ExecutiveContextProvider>
+                {children}
+              </ExecutiveContextProvider>
             </BusinessDataProvider>
           </OnboardingProvider>
         </ThemeProvider>

@@ -1,56 +1,230 @@
-# Gemma SME Growth & Advisory Agent — Project Condition
+<div align="center">
 
-This Next.js 15 project acts as a full-stack AI Financial Copilot for Meenakshi Precision Components (CNC precision machining SME in Peenya, Bengaluru). It features a multi-agent routing layout where core pillars are divided into active data-driven pipelines and static/seeded mock advisory widgets:
+# ⚡ FinCent — AI CTO Manufacturing Operations OS
 
-## 📊 Current Project Condition & Feature Status
+### *Autonomous AI Operations Team & Executive AI CTO for SME Precision Manufacturers*
 
-### ✅ Fully Functional & Dynamic Modules (Grounded in CSV/Sample Uploads)
-These pages dynamically process any uploaded sales history dataset or loaded sample file using combined Python XGBoost regressor models, SHAP explainability, and live Google Gemma semantic reasoning:
-*   **Revenue Intelligence (`/revenue-intelligence`)**: Real weekly sales predictions, prediction boundaries, and SHAP waterfall driver analysis.
-*   **Customer Intelligence (`/customer-intelligence`)**: Dynamic payment delay risk metrics, customer concentration shares, and late billing tables.
-*   **What-If Simulator (`/what-if-simulator`)**: Real-time slider overrides (orders volume, material costs) feeding live updates directly back into the Recharts forecast line plots.
-*   **Ask Your AI CFO (`/ask-ai-cfo`)**: Live conversational QA grounded in the current sales context.
-*   **Executive Advisor (`/executive-advisor`)**: Synthesized operational checklists automatically derived from dataset parameters.
-*   **Reports Center (`/reports`)**: Printable board-brief and credit memos generated dynamically via Gemma.
-
-### ⚠️ Database-Seeded / Simulated Modules (Pre-Configured Seed Data)
-These pages are fully designed and functional but render static/simulated directories using pre-configured PostgreSQL seed data rather than the uploaded CSV sales log (which lacks BOM and vendor schemas):
-*   **Pricing Agent (`/pricing-agent`)**: BOM pricing margins, steel cost watches, and pricing recommendations.
-*   **Supplier Agent (`/supplier-agent`)**: CNC tooling quantities, reorder point thresholds, and supply chain directories.
-*   **Collections Agent Follow-up (`/collections-agent`)**: Communication drafts generator (Email, WhatsApp, Phone) using the client risk profile list, but not linked to live payment gateways.
+[![Built with Gemma](https://img.shields.io/badge/Built%20With-Gemma%20AI-blueviolet?style=for-the-badge&logo=google)](https://ai.google.dev/gemma)
+[![Next.js 15](https://img.shields.io/badge/Next.js-15.5-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-06B6D4?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
+[![Prisma ORM](https://img.shields.io/badge/Prisma-PostgreSQL-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
 
 ---
-## Getting Started
 
-First, run the development server:
+<img src="docs/screenshots/control-room.png" alt="FinCent Executive Control Room" width="100%" />
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+</div>
+
+## 🌟 Executive Summary
+
+**FinCent** transforms SME manufacturing businesses from manual, fragmented dashboard checking into an **autonomous, self-coordinating AI Operations Team led by an Executive AI CTO**.
+
+Rather than presenting static analytics, FinCent continuously:
+* 📡 **Observes Business Events** — Inflation surges, inventory stockouts, WhatsApp supplier quotes, invoice delays.
+* 🤖 **Evaluates Operating SOPs** — Dynamically matches business events to operational Standard Operating Procedures.
+* ⚡ **Plans & Coordinates DAG Workflows** — Delegates execution to specialized AI Worker Managers.
+* 🛡️ **Requests 1-Click Owner Approvals** — Pauses critical monetary & binding steps until the owner approves via web or WhatsApp.
+* 🔨 **Executes Verified Business Tools** — Modifies Tally ERP ledgers, creates purchase orders, and dispatches supplier RFQs via 43 registered tools.
+* 📊 **Reports Financial Outcomes** — Quantifies daily margin protected, stockouts prevented, and hours saved.
+
+---
+
+## 📸 Product Experience Gallery
+
+### 1. Executive Control Room & Pitch Demo Simulator
+*Simulate a live manufacturing business day in 120 seconds with real-time DAG progression across all worker nodes.*
+
+![FinCent Control Room](docs/screenshots/control-room.png)
+
+---
+
+### 2. Onboarding Wizard
+*Tailor Gemma intelligence to your exact tracking methods (Notebook, Excel spreadsheets, or Tally ERP).*
+
+![Onboarding Setup](docs/screenshots/onboarding.png)
+
+---
+
+### 3. Business Operations OS Hub (`/operations`)
+*Unified operational command center listing 8 active domain worker nodes, running DAG graphs, and audit trails.*
+
+![Operations OS](docs/screenshots/operations.png)
+
+---
+
+### 4. Pricing & Margin Defense (`/pricing-agent`)
+*Defends product gross margin corridors against raw material price spikes with automated BOM surcharge pass-through.*
+
+![Pricing Defense](docs/screenshots/pricing_agent.png)
+
+---
+
+### 5. Supplier RFQ & Procurement (`/supplier-agent`)
+*Automates supplier quote requests, vendor lead-time comparisons, and OCR invoice parsing.*
+
+![Supplier Procurement](docs/screenshots/supplier-rfq.png)
+
+---
+
+### 6. Accounts Receivable & Collections (`/collections-agent`)
+*Aging ledger analysis with automated AI collection outreach generator (Gentle / Professional / Firm tones).*
+
+![Collections AR](docs/screenshots/collections-ar.png)
+
+---
+
+### 7. Revenue Intelligence & SHAP Explainability (`/revenue-intelligence`)
+*Time-series XGBoost ML predictions with 8-week forecasting and SHAP feature waterfall attribution.*
+
+![Revenue Intelligence](docs/screenshots/revenue-forecast.png)
+
+---
+
+### 8. Market Intelligence & Commodity News Crawler (`/market-intelligence`)
+*Real-time RSS news crawler indexing Peenya cluster steel spot prices, aluminum indices, and power tariffs.*
+
+![Market Signals](docs/screenshots/market-signals.png)
+
+---
+
+### 9. Customer Credit & Concentration Matrix (`/customer-intelligence`)
+*Customer concentration analysis, credit policy recommendations, and payment delay risk badges.*
+
+![Customer Intelligence](docs/screenshots/customer-intelligence.png)
+
+---
+
+### 10. Executive Reports Center (`/reports`)
+*Automated PDF executive briefing memo generator compiling 8 operation summaries into print-ready reports.*
+
+![Reports Center](docs/screenshots/reports-center.png)
+
+---
+
+### 11. AI CFO Consultation Chat (`/ask-ai-cfo`)
+*Interactive financial copilot streaming responses from local Ollama (`gemma4:cloud`) models.*
+
+![AI CFO Chat](docs/screenshots/ai-cfo-chat.png)
+
+---
+
+### 12. What-If Machine & Margin Simulator (`/what-if-simulator`)
+*Interactive scenario sliders for raw material costs, customer order multipliers, and machine capacity utilization.*
+
+![What-If Simulator](docs/screenshots/what-if-simulator.png)
+
+---
+
+### 13. Executive AI CTO Advisory Board (`/executive-advisor`)
+*Strategic operational decision checklists correlated across internal sales ledgers and external market signals.*
+
+![Executive Advisor](docs/screenshots/executive-advisor.png)
+
+---
+
+## 🏗️ Architecture Overview
+
+```
+                      +----------------------------------+
+                      |       Business Event Stream      |
+                      |  (News, Invoices, WhatsApp, ERP) |
+                      +-----------------+----------------+
+                                        |
+                                        v
+                      +-----------------+----------------+
+                      |        Executive AI CTO          |
+                      |   (Gemma LLM Reasoning Layer)    |
+                      +-----------------+----------------+
+                                        |
+                                        v
+                      +-----------------+----------------+
+                      |     SOP Evaluation & Matcher     |
+                      +-----------------+----------------+
+                                        |
+                                        v
+                      +-----------------+----------------+
+                      |     Workflow Engine (DAGs)       |
+                      +-------+------------------+-------+
+                              |                  |
+                              v                  v
+                 +------------+---+          +---+------------+
+                 | Autonomous     |          | Owner Approval |
+                 | Step Execution |          | Gate (1-Click) |
+                 +------------+---+          +---+------------+
+                              |                  |
+                              +--------+---------+
+                                       |
+                                       v
+                      +----------------+-----------------+
+                      |    Capability Tool Registry      |
+                      |      (43 Business Tools)         |
+                      +----------------+-----------------+
+                                       |
+                                       v
+                      +----------------+-----------------+
+                      |   Tally ERP / WhatsApp / Database|
+                      +----------------------------------+
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Quick Start Guide
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Prerequisites
+* **Node.js**: `v20.0.0+`
+* **PostgreSQL**: PostgreSQL database instance running locally or hosted.
+* **Ollama**: Local Ollama server running with `gemma4:cloud` or `gemma:7b`.
 
-## Learn More
+### 2. Environment Setup
+Create a `.env` file in the root directory:
 
-To learn more about Next.js, take a look at the following resources:
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/revenue_agent"
+OLLAMA_BASE_URL="http://localhost:11434"
+OLLAMA_MODEL="gemma4:cloud"
+PORT=5000
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 3. Installation & Database Migration
+```bash
+# Install dependencies
+npm install
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Push Prisma schema to PostgreSQL
+npx prisma db push
 
-## Deploy on Vercel
+# Generate Prisma client
+npx prisma generate
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 4. Running the Development Server
+```bash
+npm run dev
+```
+Open **`http://localhost:5000`** in your browser.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🧪 Integration Verification
+
+Run the comprehensive end-to-end scratchpad test suite:
+
+```bash
+npx tsx scripts/test-scratchpad-features.ts
+```
+
+This verifies:
+* ✅ 43 Business Capability Tools
+* ✅ 8 Business Operations & DAG Execution
+* ✅ Action Center 1-Click Approvals
+* ✅ 8 Domain Worker Agents
+* ✅ Real-time Story Engine & 120s Startup Pitch Simulator
+
+---
+
+<div align="center">
+
+**FinCent AI CTO Platform** — *Evolving SME Manufacturing from Dashboards to Autonomous AI Execution.*
+
+</div>

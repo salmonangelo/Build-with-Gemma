@@ -1,15 +1,8 @@
 export interface BusinessEvent {
   id: string;
-  type: 
-    | 'InvoiceLogged'
-    | 'SupplierUpdated'
-    | 'CustomerPaymentReceived'
-    | 'QuotationGenerated'
-    | 'ReminderPrepared'
-    | 'MarketSignalDetected'
-    | 'PriceChangeDetected';
+  type: string;
   timestamp: string;
-  source: 'WhatsApp' | 'PDF Scanner' | 'Market Feed' | 'Manual Upload';
+  source: string;
   summary: string;
   details: Record<string, any>;
   deepLink?: string;

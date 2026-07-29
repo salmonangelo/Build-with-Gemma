@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ConversationService } from '@/lib/services/ConversationService';
+import { ProcurementCommunicationGateway } from '@/departments/procurement/services/ProcurementCommunicationGateway';
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Message content is required" }, { status: 400 });
     }
 
+    // 1. Try Procurement Communication Gateway first
+    const gatewayResult = await ProcurementCommunicationGateway.handleIncomingMessage(sender, message);
+    if (gatewayResult.handled) {
+      return NextResponse.json({
+        success: true,
+        reply: gatewayResult.reply,
+        missionId: gatewayResult.missionId,
+        actionTaken: gatewayResult.actionTaken
+      });
+    }
+
+    // 2. Fallback to Omnichannel Conversation Engine (Existing functionality preserved 100%)
     const result = await ConversationService.handleIncomingMessage('WhatsApp', sender, message);
 
     return NextResponse.json({

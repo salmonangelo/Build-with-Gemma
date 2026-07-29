@@ -1,12 +1,35 @@
+/**
+ * ============================================================================
+ * MODULE PURPOSE: Multi-Provider LLM Client (Groq LPU API + Ollama Fallback)
+ * RESPONSIBILITIES:
+ *  - Interfacing with Groq API (llama-3.3-70b-versatile) for ultra-fast ~300ms inference.
+ *  - Fallback to local Ollama server running gemma4:cloud model.
+ *  - Auto-reparative JSON cleaning & repair for robust extraction.
+ * OWNS: LLM completion calls, JSON auto-repair, and provider selection.
+ * SHOULD NOT OWN: Domain business logic or database persistence operations.
+ * ============================================================================
+ */
+
 import OpenAI from "openai";
+
+export const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
+export const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 
 export const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://localhost:11434/v1";
 export const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "gemma4:cloud";
 
-export const ai = new OpenAI({
-  baseURL: OLLAMA_BASE_URL,
-  apiKey: "ollama", // Dummy placeholder required by OpenAI SDK
-});
+// Initialize OpenAI client targeting Groq API when key is present, otherwise Ollama
+export const ai = GROQ_API_KEY
+  ? new OpenAI({
+      baseURL: "https://api.groq.com/openai/v1",
+      apiKey: GROQ_API_KEY,
+    })
+  : new OpenAI({
+      baseURL: OLLAMA_BASE_URL,
+      apiKey: "ollama",
+    });
+
+export const ACTIVE_MODEL = GROQ_API_KEY ? GROQ_MODEL : OLLAMA_MODEL;
 
 export class AIService {
   static cleanJsonText(text: string): string {
@@ -54,15 +77,21 @@ export class AIService {
     }
   }
 
-
   /**
-   * Generates a text or structured JSON completion using the local Ollama provider layer.
+   * Generates a text or structured JSON completion using Groq LPU API / Ollama fallback.
    */
   static async generateCompletion(prompt: string, isJson: boolean = false): Promise<string> {
-    console.log(`🤖 [AIService] Sending prompt to Ollama (${OLLAMA_MODEL}) at ${OLLAMA_BASE_URL}...`);
+    const providerName = GROQ_API_KEY ? `Groq API (${GROQ_MODEL})` : `Ollama (${OLLAMA_MODEL})`;
+    console.log(`⚡ [AIService] Sending prompt to ${providerName}...`);
+
+    let finalPrompt = prompt;
+    if (isJson && !prompt.toLowerCase().includes('json')) {
+      finalPrompt = `${prompt}\n\nPlease output the result in valid JSON format.`;
+    }
+
     const options: any = {
-      model: OLLAMA_MODEL,
-      messages: [{ role: "user", content: prompt }],
+      model: ACTIVE_MODEL,
+      messages: [{ role: "user", content: finalPrompt }],
       temperature: 0.4,
     };
 
@@ -74,64 +103,38 @@ export class AIService {
       const response = await ai.chat.completions.create(options);
       const text = response.choices[0]?.message?.content;
       if (!text) {
-        throw new Error("Ollama returned an empty response.");
+        throw new Error(`${providerName} returned an empty response.`);
       }
-      console.log(`✅ [AIService] Received live response from ${OLLAMA_MODEL} (${text.length} chars)`);
+      console.log(`✅ [AIService] Received ultra-fast response from ${providerName} (${text.length} chars)`);
       return isJson ? AIService.cleanJsonText(text) : text;
     } catch (error: any) {
-      if (error.code === 'ECONNREFUSED' || error.message?.includes('fetch failed')) {
-        console.warn(`[AIService] Ollama server unreachable at ${OLLAMA_BASE_URL}. Ensure 'ollama run ${OLLAMA_MODEL}' is active.`);
-      } else {
-        console.warn(`[AIService] Completion request failed (${OLLAMA_MODEL}):`, error.message || error);
-      }
+      console.warn(`⚠️ [AIService] Completion request failed (${ACTIVE_MODEL}):`, error.message || error);
       throw error;
     }
   }
-
 
   /**
    * Generates a conversational chat response using chat history.
    */
   static async generateChatCompletion(messages: Array<{ role: string; content: string }>): Promise<string> {
-    console.log(`🤖 [AIService] Chat request with ${messages.length} messages -> Ollama (${OLLAMA_MODEL})...`);
+    const providerName = GROQ_API_KEY ? `Groq API (${GROQ_MODEL})` : `Ollama (${OLLAMA_MODEL})`;
+    console.log(`⚡ [AIService] Chat request with ${messages.length} messages -> ${providerName}...`);
+
     try {
       const response = await ai.chat.completions.create({
-        model: OLLAMA_MODEL,
-        messages: messages.map(m => ({
-          role: m.role === 'user' ? 'user' : 'assistant',
-          content: m.content
-        })),
-        temperature: 0.4,
+        model: ACTIVE_MODEL,
+        messages: messages as any,
+        temperature: 0.5,
       });
 
       const text = response.choices[0]?.message?.content;
       if (!text) {
-        throw new Error("Ollama returned an empty chat response.");
+        throw new Error(`${providerName} returned an empty chat response.`);
       }
-      console.log(`✅ [AIService] Received live chat response from ${OLLAMA_MODEL} (${text.length} chars)`);
       return text;
     } catch (error: any) {
-      if (error.code === 'ECONNREFUSED' || error.message?.includes('fetch failed')) {
-        console.warn(`[AIService] Ollama server unreachable at ${OLLAMA_BASE_URL}. Ensure 'ollama run ${OLLAMA_MODEL}' is active.`);
-      } else {
-        console.warn(`[AIService] Chat completion failed (${OLLAMA_MODEL}):`, error.message || error);
-      }
+      console.warn(`⚠️ [AIService] Chat completion failed (${ACTIVE_MODEL}):`, error.message || error);
       throw error;
-    }
-  }
-
-  /**
-   * Health check to verify Ollama server is running and gemma4:cloud model is reachable.
-   */
-  static async checkOllamaHealth(): Promise<{ ok: boolean; message: string }> {
-    try {
-      const res = await fetch(`${OLLAMA_BASE_URL}/models`);
-      if (res.ok) {
-        return { ok: true, message: `Ollama service online at ${OLLAMA_BASE_URL} (Model: ${OLLAMA_MODEL})` };
-      }
-      return { ok: false, message: `Ollama returned HTTP status ${res.status}` };
-    } catch (err: any) {
-      return { ok: false, message: `Cannot connect to Ollama at ${OLLAMA_BASE_URL}. Please start Ollama server.` };
     }
   }
 }

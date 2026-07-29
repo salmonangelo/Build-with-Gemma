@@ -59,7 +59,7 @@ export class ExecutiveCTOAgent {
     }
 
     // 2. Handling Raw Material Price Inflation Events
-    if (event.type === 'PriceChangeDetected' || event.type === ('CommodityPriceUpdated' as any) || event.summary.toLowerCase().includes('steel')) {
+    if (event.type === 'PriceChangeDetected' || event.type === ('CommodityPriceUpdated' as any)) {
       const sops = KnowledgeBaseService.queryKnowledge('surcharge');
       console.log(`📚 [ExecutiveCTO] Consulted ${sops.length} SOPs for pricing pass-through workflow planning.`);
 

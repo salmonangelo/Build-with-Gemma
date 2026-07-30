@@ -28,6 +28,7 @@ interface SupplierMasterItem {
   id: number;
   name: string;
   contactChannel: string;
+  whatsappJid?: string;
   materials: string;
   materialCategory: string;
   reliabilityScore: number;
@@ -59,8 +60,10 @@ export default function RealWhatsAppSupplierAgentPage() {
   const [suppliers, setSuppliers] = useState<SupplierMasterItem[]>([]);
   const [newSupplierName, setNewSupplierName] = useState('');
   const [newSupplierPhone, setNewSupplierPhone] = useState('');
+  const [newSupplierJid, setNewSupplierJid] = useState('');
   const [newSupplierMaterial, setNewSupplierMaterial] = useState('Stainless Steel');
   const [savingSupplier, setSavingSupplier] = useState(false);
+  const [jidInputs, setJidInputs] = useState<Record<number, string>>({});
 
   // 3. Phase 1 & 2 — Inventory State & Dynamic Required Quantities
   const [inventory, setInventory] = useState({
@@ -263,6 +266,23 @@ export default function RealWhatsAppSupplierAgentPage() {
     }
   };
 
+  // Update Supplier WhatsApp JID (Phase 1 & JID Mapping)
+  const handleUpdateJid = async (supplierId: number, jidValue: string) => {
+    try {
+      const res = await fetch('/api/suppliers', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: supplierId, whatsappJid: jidValue })
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchSuppliers();
+      }
+    } catch (e) {
+      console.error('[Update JID error]:', e);
+    }
+  };
+
   // Add Supplier Click (Phase 1)
   const handleSaveSupplier = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -276,6 +296,7 @@ export default function RealWhatsAppSupplierAgentPage() {
         body: JSON.stringify({
           name: newSupplierName,
           phone: newSupplierPhone,
+          whatsappJid: newSupplierJid,
           material: newSupplierMaterial
         })
       });
@@ -283,6 +304,7 @@ export default function RealWhatsAppSupplierAgentPage() {
       if (data.success) {
         setNewSupplierName('');
         setNewSupplierPhone('');
+        setNewSupplierJid('');
         fetchSuppliers();
       }
     } catch (e) {
@@ -558,6 +580,7 @@ export default function RealWhatsAppSupplierAgentPage() {
                   <th className="py-3 px-4">Supplier</th>
                   <th className="py-3 px-4">Phone Number</th>
                   <th className="py-3 px-4">Material Category</th>
+                  <th className="py-3 px-4">WhatsApp JID</th>
                   <th className="py-3 px-4">Reliability</th>
                   <th className="py-3 px-4">Avg Delivery</th>
                   <th className="py-3 px-4">Completed</th>
@@ -570,7 +593,7 @@ export default function RealWhatsAppSupplierAgentPage() {
               <tbody className="divide-y divide-[var(--border-subtle)] font-sans">
                 {suppliers.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="py-6 text-center text-[var(--text-muted)]">
+                    <td colSpan={11} className="py-6 text-center text-[var(--text-muted)]">
                       No suppliers registered. Add a new supplier below.
                     </td>
                   </tr>
@@ -583,6 +606,25 @@ export default function RealWhatsAppSupplierAgentPage() {
                         <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 font-bold text-[10px] border border-blue-500/20">
                           {s.materialCategory || s.materials}
                         </span>
+                      </td>
+                      {/* WhatsApp JID Editable Cell */}
+                      <td className="py-3 px-4 font-mono">
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            placeholder="e.g. 202516935528474"
+                            value={jidInputs[s.id] !== undefined ? jidInputs[s.id] : (s.whatsappJid || '')}
+                            onChange={e => setJidInputs({ ...jidInputs, [s.id]: e.target.value })}
+                            className="w-36 px-2 py-1 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-lg text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:border-purple-500"
+                          />
+                          <button
+                            onClick={() => handleUpdateJid(s.id, jidInputs[s.id] !== undefined ? jidInputs[s.id] : (s.whatsappJid || ''))}
+                            className="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-[10px] font-bold transition-all cursor-pointer shadow-xs"
+                            title="Save WhatsApp JID"
+                          >
+                            Save
+                          </button>
+                        </div>
                       </td>
                       <td className="py-3 px-4 font-bold">
                         <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono ${
@@ -623,7 +665,7 @@ export default function RealWhatsAppSupplierAgentPage() {
           </div>
 
           {/* Add Supplier Form */}
-          <form onSubmit={handleSaveSupplier} className="pt-2 border-t border-[var(--border-subtle)] grid grid-cols-1 sm:grid-cols-4 gap-2">
+          <form onSubmit={handleSaveSupplier} className="pt-2 border-t border-[var(--border-subtle)] grid grid-cols-1 sm:grid-cols-5 gap-2">
             <input
               type="text"
               placeholder="Supplier Name (e.g. Srinidhi)"
@@ -639,6 +681,13 @@ export default function RealWhatsAppSupplierAgentPage() {
               onChange={e => setNewSupplierPhone(e.target.value)}
               className="px-3 py-2 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-xl text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--primary)]"
               required
+            />
+            <input
+              type="text"
+              placeholder="WhatsApp JID (e.g. 202516935528474)"
+              value={newSupplierJid}
+              onChange={e => setNewSupplierJid(e.target.value)}
+              className="px-3 py-2 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-xl text-xs text-[var(--text-primary)] font-mono focus:outline-none focus:border-[var(--primary)]"
             />
             <select
               value={newSupplierMaterial}

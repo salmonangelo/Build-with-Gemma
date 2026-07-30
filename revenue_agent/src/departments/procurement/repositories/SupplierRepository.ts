@@ -4,6 +4,7 @@
  * RESPONSIBILITIES:
  *  - Encapsulates Prisma SQL database queries for `Supplier` table.
  *  - Manages Supplier Master record metrics (Reliability %, Completed/Delayed Orders, Active Mission).
+ *  - Stores and updates manual WhatsApp JID mappings per supplier.
  * OWNS: Direct Prisma DB queries & in-memory master state sync for registered suppliers.
  * SHOULD NOT OWN: Vendor quotation analysis math.
  * ============================================================================
@@ -13,6 +14,7 @@ export interface SupplierMasterItem {
   id: number;
   name: string;
   contactChannel: string; // phone number
+  whatsappJid: string; // Manual WhatsApp JID e.g. "202516935528474"
   materials: string; // JSON string or comma-separated string e.g. "Stainless Steel"
   materialCategory: string; // Clean category name e.g. "Stainless Steel", "Mild Steel"
   reliabilityScore: number; // 0 - 100
@@ -36,8 +38,8 @@ const supplierMasterStats: Record<string, { completedOrders: number; delayedOrde
 
 export class SupplierRepository {
   /**
-   * Returns all suppliers populated with Supplier Master fields.
-   * If DB has < 4 suppliers, ensures seed master suppliers (Srinidhi, Mithran, Shakti, Sathur) are created.
+   * Returns all suppliers populated with Supplier Master fields including WhatsApp JID.
+   * If DB has < 4 suppliers, ensures seed master suppliers are created.
    */
   static async getAllSuppliers(): Promise<SupplierMasterItem[]> {
     const { prisma } = await import('@/lib/prisma-client');
@@ -75,11 +77,14 @@ export class SupplierRepository {
         id: s.id,
         name: s.name,
         contactChannel: s.contactChannel,
+        whatsappJid: (s as any).whatsappJid || '',
         materials: parsedMat,
         materialCategory: cleanCategory,
         reliabilityScore: stats.reliabilityScore,
         reliabilityRating: `${stats.reliabilityScore}% High`,
         avgLeadTime: s.avgLeadTime || '2 Days',
+        estimatedQuote: s.estimatedQuote || '₹95/kg',
+        sourceUrl: s.sourceUrl || '',
         completedOrders: stats.completedOrders,
         delayedOrders: stats.delayedOrders,
         currentMissionId: stats.currentMissionId,
@@ -88,14 +93,17 @@ export class SupplierRepository {
     });
   }
 
+  /**
+   * Ensures default seed suppliers exist in the SQL database with manually configured WhatsApp JIDs.
+   */
   static async ensureSeedSuppliers() {
     const { prisma } = await import('@/lib/prisma-client');
 
     const seeds = [
-      { name: 'Srinidhi', phone: '+919880011223', material: 'Stainless Steel', lead: '2 Days', quote: '₹93/kg', rating: '96% High' },
-      { name: 'Mithran', phone: '+918438025210', material: 'Stainless Steel', lead: '2 Days', quote: '₹95/kg', rating: '91% High' },
-      { name: 'Shakti', phone: '+918778508344', material: 'Stainless Steel', lead: '1 Day', quote: '₹97/kg', rating: '88% High' },
-      { name: 'Sathur', phone: '+919999988888', material: 'Mild Steel', lead: '3 Days', quote: '₹85/kg', rating: '94% High' }
+      { name: 'Srinidhi', phone: '+919880011223', jid: '202516935528474', material: 'Stainless Steel', lead: '2 Days', quote: '₹93/kg', rating: '96% High' },
+      { name: 'Mithran', phone: '+918438025210', jid: '203987654321987', material: 'Stainless Steel', lead: '2 Days', quote: '₹95/kg', rating: '91% High' },
+      { name: 'Shakti', phone: '+918778508344', jid: '204118762311452', material: 'Stainless Steel', lead: '1 Day', quote: '₹97/kg', rating: '88% High' },
+      { name: 'Sathur', phone: '+919999988888', jid: '209123456789654', material: 'Mild Steel', lead: '3 Days', quote: '₹85/kg', rating: '94% High' }
     ];
 
     for (const seed of seeds) {
@@ -106,12 +114,18 @@ export class SupplierRepository {
             data: {
               name: seed.name,
               contactChannel: seed.phone,
+              whatsappJid: seed.jid,
               materials: JSON.stringify([seed.material]),
               avgLeadTime: seed.lead,
               estimatedQuote: seed.quote,
               reliabilityRating: seed.rating,
               sourceUrl: ''
             }
+          });
+        } else if (!(existing as any).whatsappJid) {
+          await prisma.supplier.update({
+            where: { id: existing.id },
+            data: { whatsappJid: seed.jid }
           });
         }
       } catch (e) {
@@ -120,7 +134,10 @@ export class SupplierRepository {
     }
   }
 
-  static async createSupplier(name: string, phone: string, material: string) {
+  /**
+   * Creates a new supplier in the database with an optional WhatsApp JID.
+   */
+  static async createSupplier(name: string, phone: string, material: string, whatsappJid: string = '') {
     const { prisma } = await import('@/lib/prisma-client');
     const materialsJson = JSON.stringify([material]);
 
@@ -128,6 +145,7 @@ export class SupplierRepository {
       data: {
         name,
         contactChannel: phone,
+        whatsappJid,
         materials: materialsJson,
         avgLeadTime: '2 Days',
         estimatedQuote: '₹95/kg',
@@ -147,6 +165,20 @@ export class SupplierRepository {
     return created;
   }
 
+  /**
+   * Updates the manual WhatsApp JID for a specific supplier in the Supplier Master.
+   */
+  static async updateSupplierJid(id: number, whatsappJid: string) {
+    const { prisma } = await import('@/lib/prisma-client');
+    return prisma.supplier.update({
+      where: { id },
+      data: { whatsappJid: whatsappJid.trim() }
+    });
+  }
+
+  /**
+   * Deletes a supplier from the Supplier Master table.
+   */
   static async deleteSupplier(id: number) {
     const { prisma } = await import('@/lib/prisma-client');
     return prisma.supplier.delete({
@@ -154,6 +186,9 @@ export class SupplierRepository {
     });
   }
 
+  /**
+   * Updates supplier status to 'Available' or 'In Mission'.
+   */
   static async updateSupplierStatus(supplierName: string, status: 'Available' | 'In Mission', missionId?: string | null) {
     const key = Object.keys(supplierMasterStats).find(k => k.toLowerCase() === supplierName.toLowerCase()) || supplierName;
     if (!supplierMasterStats[key]) {
@@ -163,6 +198,9 @@ export class SupplierRepository {
     supplierMasterStats[key].currentMissionId = missionId || null;
   }
 
+  /**
+   * Updates performance metrics after order completion.
+   */
   static async updatePerformanceMetrics(name: string, newReliabilityScore: number, wasDelayed: boolean = false) {
     const key = Object.keys(supplierMasterStats).find(k => k.toLowerCase() === name.toLowerCase()) || name;
     if (!supplierMasterStats[key]) {

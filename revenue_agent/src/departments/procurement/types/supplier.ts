@@ -16,6 +16,7 @@ export interface SupplierData {
   estimatedQuote: string;
   reliabilityRating: number;
   contactChannel: string;
+  whatsappJid?: string;
   sourceUrl?: string;
 }
 

@@ -124,6 +124,7 @@ model Supplier {
   estimatedQuote    String
   reliabilityRating String
   contactChannel    String
+  whatsappJid       String?  @default("")
   sourceUrl         String
 }
 

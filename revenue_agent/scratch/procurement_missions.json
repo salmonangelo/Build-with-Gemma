@@ -10721,5 +10721,1174 @@
     "updatedAt": "2026-07-29T06:46:52.135Z",
     "progress": 100,
     "completedAt": "2026-07-29T06:46:52.135Z"
+  },
+  {
+    "id": "mission-proc-831839",
+    "sku": "RM-SS-SHEET-15",
+    "itemName": "Stainless Steel",
+    "currentStage": "Owner_Approval",
+    "status": "Cancelled",
+    "progressPercentage": 75,
+    "startedAt": "2026-07-30T10:05:06.002Z",
+    "lastUpdatedAt": "2026-07-30T10:05:06.002Z",
+    "context": {
+      "sku": "RM-SS-SHEET-15",
+      "itemName": "Stainless Steel",
+      "currentStock": 5,
+      "minThreshold": 10,
+      "quantityNeeded": 1,
+      "targetDeliveryDate": "2 Days",
+      "estimatedSavings": 250,
+      "riskLevel": "High",
+      "assignedWorker": "ProcurementWorker",
+      "missionParticipants": [
+        {
+          "missionId": "mission-proc-831839",
+          "supplierId": 33,
+          "supplierName": "srinithi",
+          "phone": "+919361779326",
+          "rfqSent": true,
+          "quoteReceived": true,
+          "quoteParsed": true,
+          "selected": true,
+          "confirmed": false,
+          "whatsappJid": "208048383627422",
+          "quoteData": {
+            "price": 280319,
+            "deliveryDays": 2,
+            "moq": 15,
+            "paymentTerms": "Net 30 Days",
+            "rawMessage": "280319 is OTP for Aadhaar (XX5571) (valid for 10 mins) at UIDAI Internal. Mandatory Biometric update for age group 5 to 17 is free of cost -UIDAI",
+            "aiScore": 53.9,
+            "reliability": 95,
+            "weightedScore": 53.9,
+            "businessReasoning": "srinithi offers unit cost of ₹2,026 with 2-day lead time, 95% reliability rating, and 12 historical fulfilled orders."
+          }
+        },
+        {
+          "missionId": "mission-proc-831839",
+          "supplierId": 46,
+          "supplierName": "varan",
+          "phone": "+919363638758",
+          "rfqSent": true,
+          "quoteReceived": true,
+          "quoteParsed": true,
+          "selected": false,
+          "confirmed": false,
+          "whatsappJid": "102375545118974",
+          "quoteData": {
+            "price": 91,
+            "deliveryDays": 2,
+            "moq": 15,
+            "paymentTerms": "Net 30 Days",
+            "rawMessage": "+91 84891 14228",
+            "aiScore": 85.4,
+            "reliability": 95,
+            "weightedScore": 85.4,
+            "businessReasoning": "varan offers unit cost of ₹91 with 2-day lead time, 95% reliability rating, and 12 historical fulfilled orders."
+          }
+        },
+        {
+          "missionId": "mission-proc-831839",
+          "supplierId": 48,
+          "supplierName": "Mithran",
+          "phone": "+918438025210",
+          "rfqSent": true,
+          "quoteReceived": true,
+          "quoteParsed": true,
+          "selected": false,
+          "confirmed": false,
+          "whatsappJid": "145277637914842",
+          "quoteData": {
+            "price": 4200,
+            "deliveryDays": 2,
+            "moq": 15,
+            "paymentTerms": "Net 30 Days",
+            "rawMessage": "4 nd 12 slide ahh nalla potrunga",
+            "aiScore": 53.1,
+            "reliability": 95,
+            "weightedScore": 53.1,
+            "businessReasoning": "Mithran offers unit cost of ₹4,200 with 2-day lead time, 95% reliability rating, and 12 historical fulfilled orders."
+          }
+        },
+        {
+          "missionId": "mission-proc-831839",
+          "supplierId": 49,
+          "supplierName": "Shakti",
+          "phone": "+918778508344",
+          "rfqSent": true,
+          "quoteReceived": true,
+          "quoteParsed": true,
+          "selected": false,
+          "confirmed": false,
+          "whatsappJid": "202516935528474",
+          "quoteData": {
+            "price": 75,
+            "deliveryDays": 5,
+            "moq": 15,
+            "paymentTerms": "Net 30 Days",
+            "rawMessage": "75/kg delivery 5days",
+            "aiScore": 83.4,
+            "reliability": 95,
+            "weightedScore": 83.4,
+            "businessReasoning": "Shakti offers unit cost of ₹75 with 5-day lead time, 95% reliability rating, and 12 historical fulfilled orders."
+          }
+        },
+        {
+          "missionId": "mission-proc-831839",
+          "supplierId": 58,
+          "supplierName": "Kirubhashini",
+          "phone": "+919150272141",
+          "rfqSent": true,
+          "quoteReceived": false,
+          "quoteParsed": false,
+          "selected": false,
+          "confirmed": false
+        }
+      ],
+      "expectedQuotesCount": 5,
+      "quotesReceivedCount": 14,
+      "selectedSupplierId": 33,
+      "selectedSupplierName": "srinithi",
+      "selectedPrice": 4200,
+      "selectedLeadTime": 2,
+      "supplierContact": "+919361779326",
+      "supplyChainNodes": [
+        {
+          "id": 1,
+          "name": "Supplier Confirmed",
+          "status": "PENDING"
+        },
+        {
+          "id": 2,
+          "name": "Manufacturing",
+          "status": "PENDING"
+        },
+        {
+          "id": 3,
+          "name": "Packed",
+          "status": "PENDING"
+        },
+        {
+          "id": 4,
+          "name": "Dispatched",
+          "status": "PENDING"
+        },
+        {
+          "id": 5,
+          "name": "Warehouse",
+          "status": "PENDING"
+        },
+        {
+          "id": 6,
+          "name": "CNC Facility",
+          "status": "PENDING"
+        },
+        {
+          "id": 7,
+          "name": "Goods Received",
+          "status": "PENDING"
+        }
+      ],
+      "currentActiveNodeIndex": 0
+    },
+    "milestones": [
+      {
+        "timestamp": "03:35 pm",
+        "stage": "Mission_Created",
+        "text": "Procurement Mission 'mission-proc-831839' initialized for Stainless Steel (SKU: RM-SS-SHEET-15). Required Quantity: 1kg. Current Stock: 5kg.",
+        "actor": "ExecutiveCTO"
+      },
+      {
+        "timestamp": "03:35 pm",
+        "stage": "Supplier_Discovery",
+        "text": "Supplier Discovery completed: Filtered 5 eligible 'Stainless Steel' supplier(s): srinithi, varan, Mithran, Shakti, Kirubhashini.",
+        "actor": "SupplierFinder"
+      },
+      {
+        "timestamp": "03:35 pm",
+        "stage": "RFQ_Generation",
+        "text": "Generated Structured RFQ 'RFQ-906027' for 1kg of Stainless Steel.",
+        "actor": "ProcurementWorker"
+      },
+      {
+        "timestamp": "03:35 pm",
+        "stage": "RFQ_Dispatch",
+        "text": "RFQ 'RFQ-906027' dispatched to 5 eligible supplier(s) via WhatsApp Gateway.",
+        "actor": "ProcurementWorker"
+      },
+      {
+        "timestamp": "03:35 pm",
+        "stage": "Waiting_for_Quotations",
+        "text": "Procurement Mission 'mission-proc-831839' PAUSED in 'WAITING_FOR_QUOTES' state awaiting supplier quotation responses from 5 supplier(s) on WhatsApp.",
+        "actor": "ProcurementMissionService"
+      },
+      {
+        "timestamp": "03:35 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 1 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "03:35 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 1 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "03:35 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 2 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "03:35 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 2 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "03:36 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 3 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "03:36 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 3 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "03:36 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 4 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "03:36 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 4 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "03:37 pm",
+        "stage": "Supplier_Acceptance",
+        "text": "Purchase Order 'PO-037115' (Total: ₹4,200) dispatched ONLY to selected supplier srinithi (+919361779326) via WhatsApp. WAITING FOR SUPPLIER CONFIRMATION REPLY ON WHATSAPP.",
+        "actor": "WhatsAppGatewayConnector"
+      },
+      {
+        "timestamp": "03:37 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 5 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "03:37 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 5 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "03:38 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 6 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "03:38 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 6 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "03:38 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 7 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "03:38 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 7 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "03:38 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 8 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "03:38 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 8 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "03:38 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 9 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "03:38 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 9 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "03:39 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 10 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "03:39 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 10 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "03:39 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 11 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "03:39 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 11 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "03:39 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 12 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "03:39 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 12 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "03:40 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 13 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "03:40 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 13 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "03:41 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 14 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "03:41 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 14 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "03:42 pm",
+        "stage": "Owner_Approval",
+        "text": "🛑 Procurement Mission 'mission-proc-831839' CANCELLED by user.",
+        "actor": "UI Action"
+      }
+    ],
+    "auditTrail": [
+      {
+        "timestamp": "03:35 pm",
+        "toolId": "initialize_mission",
+        "inputPayload": {
+          "sku": "RM-SS-SHEET-15",
+          "itemName": "Stainless Steel",
+          "quantityNeeded": 1,
+          "triggerType": "Manual",
+          "reason": "Restock Stainless Steel"
+        },
+        "result": {
+          "missionId": "mission-proc-831839",
+          "status": "Active"
+        }
+      },
+      {
+        "timestamp": "03:35 pm",
+        "toolId": "discover_suppliers",
+        "inputPayload": {
+          "material": "Stainless Steel"
+        },
+        "result": {
+          "candidateCount": 5
+        }
+      },
+      {
+        "timestamp": "03:35 pm",
+        "toolId": "generate_rfq",
+        "inputPayload": {
+          "rfqNumber": "RFQ-906027",
+          "missionId": "mission-proc-831839"
+        },
+        "result": {
+          "rfq": {
+            "rfqNumber": "RFQ-906027",
+            "missionId": "mission-proc-831839",
+            "sku": "RM-SS-SHEET-15",
+            "materialName": "Stainless Steel",
+            "quantity": 1,
+            "deliveryDate": "2 Days",
+            "terms": "Net 30 Days, Delivery to Peenya Factory",
+            "supplierName": "srinithi",
+            "supplierContact": "+919361779326",
+            "status": "Sent",
+            "createdAt": "2026-07-30T10:05:06.027Z"
+          }
+        }
+      },
+      {
+        "timestamp": "03:35 pm",
+        "toolId": "send_whatsapp_message",
+        "inputPayload": {
+          "count": 5
+        },
+        "result": {
+          "dispatched": true
+        }
+      },
+      {
+        "timestamp": "03:37 pm",
+        "toolId": "send_whatsapp_po",
+        "inputPayload": {
+          "poNumber": "PO-037115",
+          "targetPhone": "+919361779326",
+          "totalCost": 4200
+        },
+        "result": {
+          "dispatched": true
+        }
+      }
+    ],
+    "updatedAt": "2026-07-30T10:12:16.783Z",
+    "progress": 75
+  },
+  {
+    "id": "mission-proc-858066",
+    "sku": "RM-SS-SHEET-15",
+    "itemName": "Stainless Steel",
+    "currentStage": "Mission_Complete",
+    "status": "Completed",
+    "progressPercentage": 100,
+    "startedAt": "2026-07-30T11:03:54.249Z",
+    "lastUpdatedAt": "2026-07-30T11:03:54.249Z",
+    "context": {
+      "sku": "RM-SS-SHEET-15",
+      "itemName": "Stainless Steel",
+      "currentStock": 5,
+      "minThreshold": 10,
+      "quantityNeeded": 15,
+      "targetDeliveryDate": "2 Days",
+      "estimatedSavings": 3750,
+      "riskLevel": "High",
+      "assignedWorker": "ProcurementWorker",
+      "missionParticipants": [
+        {
+          "missionId": "mission-proc-858066",
+          "supplierId": 33,
+          "supplierName": "srinithi",
+          "phone": "+919361779326",
+          "rfqSent": true,
+          "quoteReceived": false,
+          "quoteParsed": false,
+          "selected": false,
+          "confirmed": false
+        },
+        {
+          "missionId": "mission-proc-858066",
+          "supplierId": 46,
+          "supplierName": "varan",
+          "phone": "+919363638758",
+          "rfqSent": true,
+          "quoteReceived": true,
+          "quoteParsed": true,
+          "selected": true,
+          "confirmed": true,
+          "whatsappJid": "204118762311452",
+          "quoteData": {
+            "price": 65,
+            "deliveryDays": 2,
+            "moq": 15,
+            "paymentTerms": "Net 30 Days",
+            "rawMessage": "65/kg delivery 2days",
+            "aiScore": 92.4,
+            "reliability": 95,
+            "weightedScore": 92.4,
+            "businessReasoning": "varan offers unit cost of ₹65 with 2-day lead time, 95% reliability rating, and 12 historical fulfilled orders."
+          }
+        },
+        {
+          "missionId": "mission-proc-858066",
+          "supplierId": 48,
+          "supplierName": "Mithran",
+          "phone": "+918438025210",
+          "rfqSent": true,
+          "quoteReceived": false,
+          "quoteParsed": false,
+          "selected": false,
+          "confirmed": false
+        },
+        {
+          "missionId": "mission-proc-858066",
+          "supplierId": 49,
+          "supplierName": "Shakti",
+          "phone": "+918778508344",
+          "rfqSent": true,
+          "quoteReceived": false,
+          "quoteParsed": false,
+          "selected": false,
+          "confirmed": false
+        },
+        {
+          "missionId": "mission-proc-858066",
+          "supplierId": 58,
+          "supplierName": "Kirubhashini",
+          "phone": "+919150272141",
+          "rfqSent": true,
+          "quoteReceived": false,
+          "quoteParsed": false,
+          "selected": false,
+          "confirmed": false
+        },
+        {
+          "missionId": "mission-proc-858066",
+          "supplierId": 59,
+          "supplierName": "Srinidhi",
+          "phone": "+919880011223",
+          "rfqSent": true,
+          "quoteReceived": true,
+          "quoteParsed": true,
+          "selected": false,
+          "confirmed": false,
+          "whatsappJid": "202516935528474",
+          "quoteData": {
+            "price": 75,
+            "deliveryDays": 5,
+            "moq": 15,
+            "paymentTerms": "Net 30 Days",
+            "rawMessage": "75/kg delivery 5days",
+            "aiScore": 78.1,
+            "reliability": 95,
+            "weightedScore": 78.1,
+            "businessReasoning": "Srinidhi offers unit cost of ₹75 with 5-day lead time, 95% reliability rating, and 12 historical fulfilled orders."
+          }
+        }
+      ],
+      "expectedQuotesCount": 6,
+      "quotesReceivedCount": 2,
+      "selectedSupplierId": 46,
+      "selectedSupplierName": "varan",
+      "selectedPrice": 65,
+      "selectedLeadTime": 2,
+      "supplierContact": "+919363638758",
+      "supplyChainNodes": [
+        {
+          "id": 1,
+          "name": "Supplier Confirmed",
+          "status": "ON_TIME",
+          "updatedAt": "2026-07-30T11:03:54.519Z"
+        },
+        {
+          "id": 2,
+          "name": "Manufacturing",
+          "status": "ON_TIME",
+          "updatedAt": "2026-07-30T11:03:54.526Z"
+        },
+        {
+          "id": 3,
+          "name": "Packed",
+          "status": "ON_TIME",
+          "updatedAt": "2026-07-30T11:03:54.534Z"
+        },
+        {
+          "id": 4,
+          "name": "Dispatched",
+          "status": "ON_TIME",
+          "updatedAt": "2026-07-30T11:03:54.541Z"
+        },
+        {
+          "id": 5,
+          "name": "Warehouse",
+          "status": "ON_TIME",
+          "updatedAt": "2026-07-30T11:03:54.549Z"
+        },
+        {
+          "id": 6,
+          "name": "CNC Facility",
+          "status": "ON_TIME",
+          "updatedAt": "2026-07-30T11:03:54.556Z"
+        },
+        {
+          "id": 7,
+          "name": "Goods Received",
+          "status": "ON_TIME",
+          "updatedAt": "2026-07-30T11:03:54.564Z"
+        }
+      ],
+      "currentActiveNodeIndex": 6
+    },
+    "milestones": [
+      {
+        "timestamp": "04:33 pm",
+        "stage": "Mission_Created",
+        "text": "Procurement Mission 'mission-proc-858066' initialized for Stainless Steel (SKU: RM-SS-SHEET-15). Required Quantity: 15kg. Current Stock: 5kg.",
+        "actor": "ExecutiveCTO"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "Supplier_Discovery",
+        "text": "Supplier Discovery completed: Filtered 6 eligible 'Stainless Steel' supplier(s): srinithi, varan, Mithran, Shakti, Kirubhashini, Srinidhi.",
+        "actor": "SupplierFinder"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "RFQ_Generation",
+        "text": "Generated Structured RFQ 'RFQ-434268' for 15kg of Stainless Steel.",
+        "actor": "ProcurementWorker"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "RFQ_Dispatch",
+        "text": "RFQ 'RFQ-434268' dispatched to 6 eligible supplier(s) via WhatsApp Gateway.",
+        "actor": "ProcurementWorker"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "Waiting_for_Quotations",
+        "text": "Procurement Mission 'mission-proc-858066' PAUSED in 'WAITING_FOR_QUOTES' state awaiting supplier quotation responses from 6 supplier(s) on WhatsApp.",
+        "actor": "ProcurementMissionService"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 1 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 1 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 2 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 2 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "Supplier_Acceptance",
+        "text": "Purchase Order 'PO-434498' (Total: ₹975) dispatched ONLY to selected supplier varan (+919363638758) via WhatsApp. WAITING FOR SUPPLIER CONFIRMATION REPLY ON WHATSAPP.",
+        "actor": "WhatsAppGatewayConnector"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "Shipment_Tracking",
+        "text": "Supplier 'varan' confirmed PO on WhatsApp! Supply Chain Tracker activated. Node 1 (Supplier Confirmed) set to ON-TIME.",
+        "actor": "ProcurementMissionService"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "Shipment_Tracking",
+        "text": "Supply Chain Node Supplier Confirmed marked as ON_TIME. Next node: Manufacturing.",
+        "actor": "SupplyChainTracker"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "Shipment_Tracking",
+        "text": "Supply Chain Node Manufacturing marked as ON_TIME. Next node: Packed.",
+        "actor": "SupplyChainTracker"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "Shipment_Tracking",
+        "text": "Supply Chain Node Packed marked as ON_TIME. Next node: Dispatched.",
+        "actor": "SupplyChainTracker"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "Shipment_Tracking",
+        "text": "Supply Chain Node Dispatched marked as ON_TIME. Next node: Warehouse.",
+        "actor": "SupplyChainTracker"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "Shipment_Tracking",
+        "text": "Supply Chain Node Warehouse marked as ON_TIME. Next node: CNC Facility.",
+        "actor": "SupplyChainTracker"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "Shipment_Tracking",
+        "text": "Supply Chain Node CNC Facility marked as ON_TIME. Next node: Goods Received.",
+        "actor": "SupplyChainTracker"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "Inventory_Updated",
+        "text": "Replenished +15 units of Stainless Steel (SKU: RM-SS-SHEET-15) into Machine Shop Inventory.",
+        "actor": "InventoryMonitor"
+      },
+      {
+        "timestamp": "04:33 pm",
+        "stage": "Mission_Complete",
+        "text": "Procurement Mission 'mission-proc-858066' FULLY COMPLETED! All 7 logistics nodes verified. Stock replenished by +15kg. Supplier reliability recalculated. Archived in history.",
+        "actor": "ProcurementMissionService"
+      }
+    ],
+    "auditTrail": [
+      {
+        "timestamp": "04:33 pm",
+        "toolId": "initialize_mission",
+        "inputPayload": {
+          "sku": "RM-SS-SHEET-15",
+          "itemName": "Stainless Steel",
+          "quantityNeeded": 15,
+          "triggerType": "Manual",
+          "reason": "User manual procurement request"
+        },
+        "result": {
+          "missionId": "mission-proc-858066",
+          "status": "Active"
+        }
+      },
+      {
+        "timestamp": "04:33 pm",
+        "toolId": "discover_suppliers",
+        "inputPayload": {
+          "material": "Stainless Steel"
+        },
+        "result": {
+          "candidateCount": 6
+        }
+      },
+      {
+        "timestamp": "04:33 pm",
+        "toolId": "generate_rfq",
+        "inputPayload": {
+          "rfqNumber": "RFQ-434268",
+          "missionId": "mission-proc-858066"
+        },
+        "result": {
+          "rfq": {
+            "rfqNumber": "RFQ-434268",
+            "missionId": "mission-proc-858066",
+            "sku": "RM-SS-SHEET-15",
+            "materialName": "Stainless Steel",
+            "quantity": 15,
+            "deliveryDate": "2 Days",
+            "terms": "Net 30 Days, Delivery to Peenya Factory",
+            "supplierName": "srinithi",
+            "supplierContact": "+919361779326",
+            "status": "Sent",
+            "createdAt": "2026-07-30T11:03:54.268Z"
+          }
+        }
+      },
+      {
+        "timestamp": "04:33 pm",
+        "toolId": "send_whatsapp_message",
+        "inputPayload": {
+          "count": 6
+        },
+        "result": {
+          "dispatched": true
+        }
+      },
+      {
+        "timestamp": "04:33 pm",
+        "toolId": "send_whatsapp_po",
+        "inputPayload": {
+          "poNumber": "PO-434498",
+          "targetPhone": "+919363638758",
+          "totalCost": 975
+        },
+        "result": {
+          "dispatched": true
+        }
+      }
+    ],
+    "updatedAt": "2026-07-30T11:03:54.599Z",
+    "progress": 100,
+    "completedAt": "2026-07-30T11:03:54.599Z"
+  },
+  {
+    "id": "mission-proc-913540",
+    "sku": "RM-SS-SHEET-15",
+    "itemName": "Stainless Steel",
+    "currentStage": "Mission_Complete",
+    "status": "Completed",
+    "progressPercentage": 100,
+    "startedAt": "2026-07-30T13:57:02.046Z",
+    "lastUpdatedAt": "2026-07-30T13:57:02.046Z",
+    "context": {
+      "sku": "RM-SS-SHEET-15",
+      "itemName": "Stainless Steel",
+      "currentStock": 5,
+      "minThreshold": 10,
+      "quantityNeeded": 15,
+      "targetDeliveryDate": "2 Days",
+      "estimatedSavings": 3750,
+      "riskLevel": "High",
+      "assignedWorker": "ProcurementWorker",
+      "missionParticipants": [
+        {
+          "missionId": "mission-proc-913540",
+          "supplierId": 33,
+          "supplierName": "srinithi",
+          "phone": "+919361779326",
+          "rfqSent": true,
+          "quoteReceived": false,
+          "quoteParsed": false,
+          "selected": false,
+          "confirmed": false
+        },
+        {
+          "missionId": "mission-proc-913540",
+          "supplierId": 46,
+          "supplierName": "varan",
+          "phone": "+919363638758",
+          "rfqSent": true,
+          "quoteReceived": true,
+          "quoteParsed": true,
+          "selected": true,
+          "confirmed": true,
+          "whatsappJid": "204118762311452",
+          "quoteData": {
+            "price": 65,
+            "deliveryDays": 2,
+            "moq": 15,
+            "paymentTerms": "Net 30 Days",
+            "rawMessage": "65/kg delivery 2days",
+            "aiScore": 92.4,
+            "reliability": 95,
+            "weightedScore": 92.4,
+            "businessReasoning": "varan offers unit cost of ₹65 with 2-day lead time, 95% reliability rating, and 12 historical fulfilled orders."
+          }
+        },
+        {
+          "missionId": "mission-proc-913540",
+          "supplierId": 48,
+          "supplierName": "Mithran",
+          "phone": "+918438025210",
+          "rfqSent": true,
+          "quoteReceived": false,
+          "quoteParsed": false,
+          "selected": false,
+          "confirmed": false
+        },
+        {
+          "missionId": "mission-proc-913540",
+          "supplierId": 49,
+          "supplierName": "Shakti",
+          "phone": "+918778508344",
+          "rfqSent": true,
+          "quoteReceived": false,
+          "quoteParsed": false,
+          "selected": false,
+          "confirmed": false
+        },
+        {
+          "missionId": "mission-proc-913540",
+          "supplierId": 58,
+          "supplierName": "Kirubhashini",
+          "phone": "+919150272141",
+          "rfqSent": true,
+          "quoteReceived": false,
+          "quoteParsed": false,
+          "selected": false,
+          "confirmed": false
+        },
+        {
+          "missionId": "mission-proc-913540",
+          "supplierId": 61,
+          "supplierName": "Srinidhi",
+          "phone": "+919880011223",
+          "rfqSent": true,
+          "quoteReceived": true,
+          "quoteParsed": true,
+          "selected": false,
+          "confirmed": false,
+          "whatsappJid": "202516935528474",
+          "quoteData": {
+            "price": 75,
+            "deliveryDays": 5,
+            "moq": 15,
+            "paymentTerms": "Net 30 Days",
+            "rawMessage": "75/kg delivery 5days",
+            "aiScore": 78.1,
+            "reliability": 95,
+            "weightedScore": 78.1,
+            "businessReasoning": "Srinidhi offers unit cost of ₹75 with 5-day lead time, 95% reliability rating, and 12 historical fulfilled orders."
+          }
+        }
+      ],
+      "expectedQuotesCount": 6,
+      "quotesReceivedCount": 2,
+      "selectedSupplierId": 46,
+      "selectedSupplierName": "varan",
+      "selectedPrice": 65,
+      "selectedLeadTime": 2,
+      "supplierContact": "+919363638758",
+      "supplyChainNodes": [
+        {
+          "id": 1,
+          "name": "Supplier Confirmed",
+          "status": "ON_TIME",
+          "updatedAt": "2026-07-30T13:57:02.328Z"
+        },
+        {
+          "id": 2,
+          "name": "Manufacturing",
+          "status": "ON_TIME",
+          "updatedAt": "2026-07-30T13:57:02.342Z"
+        },
+        {
+          "id": 3,
+          "name": "Packed",
+          "status": "ON_TIME",
+          "updatedAt": "2026-07-30T13:57:02.352Z"
+        },
+        {
+          "id": 4,
+          "name": "Dispatched",
+          "status": "ON_TIME",
+          "updatedAt": "2026-07-30T13:57:02.363Z"
+        },
+        {
+          "id": 5,
+          "name": "Warehouse",
+          "status": "ON_TIME",
+          "updatedAt": "2026-07-30T13:57:02.374Z"
+        },
+        {
+          "id": 6,
+          "name": "CNC Facility",
+          "status": "ON_TIME",
+          "updatedAt": "2026-07-30T13:57:02.384Z"
+        },
+        {
+          "id": 7,
+          "name": "Goods Received",
+          "status": "ON_TIME",
+          "updatedAt": "2026-07-30T13:57:02.396Z"
+        }
+      ],
+      "currentActiveNodeIndex": 6
+    },
+    "milestones": [
+      {
+        "timestamp": "07:27 pm",
+        "stage": "Mission_Created",
+        "text": "Procurement Mission 'mission-proc-913540' initialized for Stainless Steel (SKU: RM-SS-SHEET-15). Required Quantity: 15kg. Current Stock: 5kg.",
+        "actor": "ExecutiveCTO"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "Supplier_Discovery",
+        "text": "Supplier Discovery completed: Filtered 6 eligible 'Stainless Steel' supplier(s): srinithi, varan, Mithran, Shakti, Kirubhashini, Srinidhi.",
+        "actor": "SupplierFinder"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "RFQ_Generation",
+        "text": "Generated Structured RFQ 'RFQ-822067' for 15kg of Stainless Steel.",
+        "actor": "ProcurementWorker"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "RFQ_Dispatch",
+        "text": "RFQ 'RFQ-822067' dispatched to 6 eligible supplier(s) via WhatsApp Gateway.",
+        "actor": "ProcurementWorker"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "Waiting_for_Quotations",
+        "text": "Procurement Mission 'mission-proc-913540' PAUSED in 'WAITING_FOR_QUOTES' state awaiting supplier quotation responses from 6 supplier(s) on WhatsApp.",
+        "actor": "ProcurementMissionService"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 1 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 1 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "Quotation_Comparison",
+        "text": "Parsed 2 Supplier Quotation(s). Updated AI Supplier Comparison Table.",
+        "actor": "QuotationParser"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "Owner_Approval",
+        "text": "AI Comparison Table active with 2 quotation(s). User can select supplier and proceed to PO approval immediately.",
+        "actor": "QuotationAnalyzer"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "Supplier_Acceptance",
+        "text": "Purchase Order 'PO-822294' (Total: ₹975) dispatched ONLY to selected supplier varan (+919363638758) via WhatsApp. WAITING FOR SUPPLIER CONFIRMATION REPLY ON WHATSAPP.",
+        "actor": "WhatsAppGatewayConnector"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "Shipment_Tracking",
+        "text": "Supplier 'varan' confirmed PO on WhatsApp! Supply Chain Tracker activated. Node 1 (Supplier Confirmed) set to ON-TIME.",
+        "actor": "ProcurementMissionService"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "Shipment_Tracking",
+        "text": "Supply Chain Node Supplier Confirmed marked as ON_TIME. Next node: Manufacturing.",
+        "actor": "SupplyChainTracker"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "Shipment_Tracking",
+        "text": "Supply Chain Node Manufacturing marked as ON_TIME. Next node: Packed.",
+        "actor": "SupplyChainTracker"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "Shipment_Tracking",
+        "text": "Supply Chain Node Packed marked as ON_TIME. Next node: Dispatched.",
+        "actor": "SupplyChainTracker"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "Shipment_Tracking",
+        "text": "Supply Chain Node Dispatched marked as ON_TIME. Next node: Warehouse.",
+        "actor": "SupplyChainTracker"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "Shipment_Tracking",
+        "text": "Supply Chain Node Warehouse marked as ON_TIME. Next node: CNC Facility.",
+        "actor": "SupplyChainTracker"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "Shipment_Tracking",
+        "text": "Supply Chain Node CNC Facility marked as ON_TIME. Next node: Goods Received.",
+        "actor": "SupplyChainTracker"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "Inventory_Updated",
+        "text": "Replenished +15 units of Stainless Steel (SKU: RM-SS-SHEET-15) into Machine Shop Inventory.",
+        "actor": "InventoryMonitor"
+      },
+      {
+        "timestamp": "07:27 pm",
+        "stage": "Mission_Complete",
+        "text": "Procurement Mission 'mission-proc-913540' FULLY COMPLETED! All 7 logistics nodes verified. Stock replenished by +15kg. Supplier reliability recalculated. Archived in history.",
+        "actor": "ProcurementMissionService"
+      }
+    ],
+    "auditTrail": [
+      {
+        "timestamp": "07:27 pm",
+        "toolId": "initialize_mission",
+        "inputPayload": {
+          "sku": "RM-SS-SHEET-15",
+          "itemName": "Stainless Steel",
+          "quantityNeeded": 15,
+          "triggerType": "Manual",
+          "reason": "User manual procurement request"
+        },
+        "result": {
+          "missionId": "mission-proc-913540",
+          "status": "Active"
+        }
+      },
+      {
+        "timestamp": "07:27 pm",
+        "toolId": "discover_suppliers",
+        "inputPayload": {
+          "material": "Stainless Steel"
+        },
+        "result": {
+          "candidateCount": 6
+        }
+      },
+      {
+        "timestamp": "07:27 pm",
+        "toolId": "generate_rfq",
+        "inputPayload": {
+          "rfqNumber": "RFQ-822067",
+          "missionId": "mission-proc-913540"
+        },
+        "result": {
+          "rfq": {
+            "rfqNumber": "RFQ-822067",
+            "missionId": "mission-proc-913540",
+            "sku": "RM-SS-SHEET-15",
+            "materialName": "Stainless Steel",
+            "quantity": 15,
+            "deliveryDate": "2 Days",
+            "terms": "Net 30 Days, Delivery to Peenya Factory",
+            "supplierName": "srinithi",
+            "supplierContact": "+919361779326",
+            "status": "Sent",
+            "createdAt": "2026-07-30T13:57:02.067Z"
+          }
+        }
+      },
+      {
+        "timestamp": "07:27 pm",
+        "toolId": "send_whatsapp_message",
+        "inputPayload": {
+          "count": 6
+        },
+        "result": {
+          "dispatched": true
+        }
+      },
+      {
+        "timestamp": "07:27 pm",
+        "toolId": "send_whatsapp_po",
+        "inputPayload": {
+          "poNumber": "PO-822294",
+          "targetPhone": "+919363638758",
+          "totalCost": 975
+        },
+        "result": {
+          "dispatched": true
+        }
+      }
+    ],
+    "updatedAt": "2026-07-30T13:57:02.449Z",
+    "progress": 100,
+    "completedAt": "2026-07-30T13:57:02.449Z"
   }
 ]

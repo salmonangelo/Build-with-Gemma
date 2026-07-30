@@ -4,11 +4,12 @@
  * RESPONSIBILITIES:
  *  - Manages background Python WhatsApp Gateway daemon (FinCent_onborading/whatsapp.py).
  *  - Exposes send() and receive() transport methods.
- *  - Deterministically resolves sender identity using MissionParticipant entities.
- *  - Handles WhatsApp LID / JID number binding for active mission suppliers.
- *  - Filters out personal WhatsApp chats that are not part of an active Procurement Mission.
+ *  - Deterministically resolves incoming WhatsApp messages using manual WhatsApp JID from Supplier Master.
+ *  - Filters out historical messages received before backend startup or active mission creation.
+ *  - Filters out personal WhatsApp chats and unknown JIDs not registered in Supplier Master.
+ *  - Verifies that resolved suppliers belong to the active Procurement Mission.
  * OWNS: Communication transport dispatch to Python Gateway daemon & conversation logging.
- * SHOULD NOT OWN: Procurement state machine logic (delegates to ProcurementMissionService).
+ * SHOULD NOT OWN: Low-level SQL operations or state machine transitions.
  * ============================================================================
  */
 
@@ -25,7 +26,7 @@ export interface GatewayStatus {
 export interface ConversationMessage {
   id: string;
   workflowId: string;
-  sender: string;       // e.g. "Procurement AI" or "Varan" or "Srinidhi"
+  sender: string;       // e.g. "Procurement AI" or "Srinidhi" or "Varan"
   senderPhone?: string;
   direction: 'OUTGOING' | 'INCOMING';
   content: string;
@@ -35,6 +36,7 @@ export interface ConversationMessage {
 export class CommunicationService {
   private static pythonProcess: ChildProcess | null = null;
   private static messageStream: ConversationMessage[] = [];
+  private static serviceStartTime: number = Date.now();
 
   /**
    * Clears old WhatsApp session database files and forces generation of a fresh QR code.
@@ -138,14 +140,17 @@ export class CommunicationService {
 
   /**
    * Deterministically processes an incoming WhatsApp message received via webhook POST /api/whatsapp/receive.
-   * Resolves WhatsApp LIDs & phone numbers dynamically to MissionParticipants.
+   * Resolves sender strictly using WhatsApp JID from Supplier Master.
+   * Personal chats, unknown JIDs, and historical messages sent before mission creation are completely ignored!
    */
-  static async receive(fromPhone: string, messageText: string): Promise<{ handled: boolean; reply?: string }> {
+  static async receive(fromPhone: string, messageText: string, msgTimestamp?: string | number): Promise<{ handled: boolean; reply?: string }> {
     const timeStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
     const cleanFrom = fromPhone.replace(/\D/g, '');
 
+    const { SupplierRepository } = await import('@/departments/procurement/repositories/SupplierRepository');
     const { ProcurementMissionRepository } = await import('@/departments/procurement/repositories/ProcurementMissionRepository');
 
+    // 1. STEP A: Check Active Mission
     const allMissions = await ProcurementMissionRepository.getAllMissions();
     const activeMission = allMissions.find(m => m.status === 'Active' || m.status === 'Paused_Approval');
 
@@ -154,62 +159,79 @@ export class CommunicationService {
       return { handled: false, reply: 'Ignored (No active procurement mission)' };
     }
 
-    const participants = activeMission.context.missionParticipants || [];
-
-    // 1. Deterministic Sender Resolution (Phone / JID / 10-digit suffix)
-    let matchedParticipant = participants.find(p => {
-      const cleanP = p.phone ? p.phone.replace(/\D/g, '') : '';
-      if (!cleanP || !cleanFrom) return false;
-
-      if (p.whatsappJid && (p.whatsappJid === fromPhone || fromPhone.includes(p.whatsappJid))) {
-        return true;
+    // RULE 0: Historical Message Filter — Ignore messages received before active mission started or backend started!
+    if (msgTimestamp) {
+      let msgTimeMs = 0;
+      if (typeof msgTimestamp === 'number') {
+        msgTimeMs = msgTimestamp > 1e11 ? msgTimestamp : msgTimestamp * 1000;
+      } else {
+        msgTimeMs = new Date(msgTimestamp).getTime();
       }
-      if (cleanP.length >= 10 && cleanFrom.length >= 10 && cleanFrom.slice(-10) === cleanP.slice(-10)) {
-        return true;
+
+      if (!isNaN(msgTimeMs) && msgTimeMs > 0) {
+        const missionStartMs = new Date(activeMission.startedAt).getTime();
+        const cutoffMs = Math.min(missionStartMs, this.serviceStartTime) - 10000; // 10s buffer
+
+        if (msgTimeMs < cutoffMs) {
+          console.log(`ℹ️ [CommunicationService] Ignored historical WhatsApp message from ${fromPhone} (Sent at ${new Date(msgTimeMs).toISOString()}, before mission start ${activeMission.startedAt}).`);
+          return { handled: false, reply: 'Ignored (Historical message before mission start)' };
+        }
       }
-      return cleanFrom.includes(cleanP) || cleanP.includes(cleanFrom);
+    }
+
+    // 2. STEP B: Search Supplier Master strictly by WhatsApp JID
+    const allSuppliers = await SupplierRepository.getAllSuppliers();
+    let matchedSupplier = allSuppliers.find(s => {
+      if (!s.whatsappJid) return false;
+      const cleanJid = s.whatsappJid.replace(/\D/g, '');
+      if (!cleanJid) return false;
+      return cleanFrom === cleanJid || cleanFrom.includes(cleanJid) || cleanJid.includes(cleanFrom) || (cleanJid.length >= 10 && cleanFrom.endsWith(cleanJid.slice(-10)));
     });
 
-    // 2. WhatsApp LID Resolution: If incoming message is from a Baileys/WhatsMeow LID number,
-    // bind LID to the next unquoted active participant for this mission.
-    if (!matchedParticipant) {
-      const textLower = messageText.toLowerCase();
-      const isProcurementReply = textLower.includes('confirm') || textLower.includes('₹') || textLower.includes('rs') || textLower.includes('£') || textLower.includes('$') || textLower.includes('quote') || textLower.includes('delivery') || textLower.includes('kg') || /\d+/.test(textLower);
-
-      if (isProcurementReply && participants.length > 0) {
-        if (textLower.includes('confirm')) {
-          matchedParticipant = participants.find(p => p.selected && !p.confirmed) || participants.find(p => p.selected) || participants.find(p => !p.confirmed);
-        } else {
-          matchedParticipant = participants.find(p => !p.quoteReceived);
-        }
-
-        if (matchedParticipant) {
-          matchedParticipant.whatsappJid = fromPhone;
-          console.log(`🔗 [CommunicationService] Dynamically bound WhatsApp LID/JID '${fromPhone}' to MissionParticipant '${matchedParticipant.supplierName}'.`);
-        }
-      }
+    // Fallback to phone number contactChannel if whatsappJid is empty
+    if (!matchedSupplier) {
+      matchedSupplier = allSuppliers.find(s => {
+        const cleanPhone = s.contactChannel.replace(/\D/g, '');
+        if (!cleanPhone) return false;
+        return cleanFrom === cleanPhone || cleanFrom.includes(cleanPhone) || cleanPhone.includes(cleanFrom) || (cleanPhone.length >= 10 && cleanFrom.endsWith(cleanPhone.slice(-10)));
+      });
     }
 
-    // ABSOLUTE RULE: Personal WhatsApp messages & non-participants MUST NEVER APPEAR!
-    if (!matchedParticipant) {
-      console.log(`ℹ️ [CommunicationService] Ignored personal WhatsApp chat from ${fromPhone}: Sender not a participant of active procurement mission ${activeMission.id}.`);
-      return { handled: false, reply: 'Ignored (Personal chat / Not a mission participant)' };
+    // RULE 1: Unknown JID Check — If incoming JID is not present in Supplier Master, IGNORE completely!
+    if (!matchedSupplier) {
+      console.log(`ℹ️ [CommunicationService] Ignored unknown WhatsApp message from ${fromPhone}: JID not found in Supplier Master.`);
+      return { handled: false, reply: 'Ignored (Unknown JID / Not in Supplier Master)' };
     }
 
-    // 1. Log incoming message into conversation stream tagged with resolved supplier's actual name
+    // 3. STEP C: Verify Participant Membership
+    const participants = activeMission.context.missionParticipants || [];
+    const matchedParticipant = participants.find(p => p.supplierId === matchedSupplier!.id || p.supplierName.toLowerCase() === matchedSupplier!.name.toLowerCase());
+
+    // RULE 2: Participant Membership Check — If resolved supplier is NOT part of the active mission, IGNORE completely!
+    if (!matchedParticipant) {
+      console.log(`ℹ️ [CommunicationService] Ignored message from ${matchedSupplier.name} (${fromPhone}): Supplier is not a participant of active procurement mission ${activeMission.id}.`);
+      return { handled: false, reply: 'Ignored (Supplier not a participant of active procurement mission)' };
+    }
+
+    // Auto-bind WhatsApp JID to participant if missing
+    if (!matchedParticipant.whatsappJid) {
+      matchedParticipant.whatsappJid = matchedSupplier.whatsappJid || fromPhone;
+    }
+
+    // 4. STEP D: Append message under resolved supplier's name in conversation stream
     const msgObj: ConversationMessage = {
       id: `msg-in-${Date.now().toString().slice(-6)}`,
       workflowId: activeMission.id,
-      sender: matchedParticipant.supplierName,
-      senderPhone: matchedParticipant.phone,
+      sender: matchedSupplier.name,
+      senderPhone: matchedSupplier.contactChannel,
       direction: 'INCOMING',
       content: messageText,
       timestamp: timeStr
     };
     this.messageStream.push(msgObj);
 
-    // 2. Delegate to ProcurementMissionService for real event-driven processing
-    return ProcurementMissionService.processIncomingWhatsAppEvent(fromPhone, messageText);
+    // 5. STEP E: Delegate to ProcurementMissionService for state machine execution
+    return ProcurementMissionService.processIncomingWhatsAppEvent(fromPhone, messageText, matchedSupplier, matchedParticipant);
   }
 
   /**
@@ -218,5 +240,16 @@ export class CommunicationService {
   static getConversationStream(workflowId?: string): ConversationMessage[] {
     if (!workflowId) return [...this.messageStream];
     return this.messageStream.filter(m => m.workflowId === workflowId || workflowId === 'ALL');
+  }
+
+  /**
+   * Clears old conversation stream messages for a workflow or all streams.
+   */
+  static clearConversationStream(workflowId?: string) {
+    if (!workflowId) {
+      this.messageStream = [];
+    } else {
+      this.messageStream = this.messageStream.filter(m => m.workflowId !== workflowId);
+    }
   }
 }

@@ -440,7 +440,12 @@ export class ProcurementMissionService {
    * REAL WHATSAPP EVENT HANDLER driven strictly by incoming WhatsApp events from Python Gateway.
    * Handles WhatsApp LIDs & phone numbers dynamically.
    */
-  static async processIncomingWhatsAppEvent(fromPhone: string, messageText: string): Promise<{ handled: boolean; reply?: string }> {
+  static async processIncomingWhatsAppEvent(
+    fromPhone: string,
+    messageText: string,
+    passedSupplier?: any,
+    passedParticipant?: MissionParticipant
+  ): Promise<{ handled: boolean; reply?: string }> {
     const allMissions = await ProcurementMissionRepository.getAllMissions();
     const activeMission = allMissions.find(m => m.status === 'Active' || m.status === 'Paused_Approval');
 
@@ -450,40 +455,28 @@ export class ProcurementMissionService {
     const participants = activeMission.context.missionParticipants || [];
     const cleanFrom = fromPhone.replace(/\D/g, '');
 
-    // 1. Strict Deterministic Sender Resolution (Phone / JID / 10-digit suffix)
-    let matchedParticipant = participants.find(p => {
-      const cleanP = p.phone ? p.phone.replace(/\D/g, '') : '';
-      if (!cleanP || !cleanFrom) return false;
-
-      if (p.whatsappJid && (p.whatsappJid === fromPhone || fromPhone.includes(p.whatsappJid))) {
-        return true;
-      }
-      if (cleanP.length >= 10 && cleanFrom.length >= 10 && cleanFrom.slice(-10) === cleanP.slice(-10)) {
-        return true;
-      }
-      return cleanFrom.includes(cleanP) || cleanP.includes(cleanFrom);
-    });
-
-    // 2. WhatsApp LID Resolution: If incoming message is from a Baileys/WhatsMeow LID number,
-    // bind LID to the next unquoted active participant for this mission.
+    // 1. Resolve participant via passed parameter or Supplier Master JID / Phone lookup
+    let matchedParticipant = passedParticipant;
     if (!matchedParticipant) {
-      const isProcurementReply = textLower.includes('confirm') || textLower.includes('₹') || textLower.includes('rs') || textLower.includes('£') || textLower.includes('$') || textLower.includes('quote') || textLower.includes('delivery') || textLower.includes('kg') || /\d+/.test(textLower);
+      const { SupplierRepository } = await import('../repositories/SupplierRepository');
+      const allSuppliers = await SupplierRepository.getAllSuppliers();
+      const supplier = passedSupplier || allSuppliers.find(s => {
+        if (!s.whatsappJid) return false;
+        const cleanJid = s.whatsappJid.replace(/\D/g, '');
+        if (!cleanJid) return false;
+        return cleanFrom === cleanJid || cleanFrom.includes(cleanJid) || cleanJid.includes(cleanFrom) || (cleanJid.length >= 10 && cleanFrom.endsWith(cleanJid.slice(-10)));
+      }) || allSuppliers.find(s => {
+        const cleanP = s.contactChannel.replace(/\D/g, '');
+        if (!cleanP) return false;
+        return cleanFrom === cleanP || cleanFrom.includes(cleanP) || cleanP.includes(cleanFrom) || (cleanP.length >= 10 && cleanFrom.endsWith(cleanP.slice(-10)));
+      });
 
-      if (isProcurementReply && participants.length > 0) {
-        if (textLower.includes('confirm')) {
-          matchedParticipant = participants.find(p => p.selected && !p.confirmed) || participants.find(p => p.selected) || participants.find(p => !p.confirmed);
-        } else {
-          matchedParticipant = participants.find(p => !p.quoteReceived);
-        }
-
-        if (matchedParticipant) {
-          matchedParticipant.whatsappJid = fromPhone;
-          console.log(`🔗 [ProcurementMissionService] Dynamically bound WhatsApp LID/JID '${fromPhone}' to MissionParticipant '${matchedParticipant.supplierName}'.`);
-        }
+      if (supplier) {
+        matchedParticipant = participants.find(p => p.supplierId === supplier.id || p.supplierName.toLowerCase() === supplier.name.toLowerCase());
       }
     }
 
-    // ABSOLUTE RULE: Never guess supplier identity for unrelated chats. If not matched, ignore!
+    // ABSOLUTE RULE: Never guess supplier identity. If not matched, ignore!
     if (!matchedParticipant) {
       console.log(`ℹ️ [ProcurementMissionService] Ignored incoming WhatsApp event from '${fromPhone}': Sender not a participant of active procurement mission ${activeMission.id}.`);
       return { handled: false, reply: 'Ignored (Not a mission participant)' };

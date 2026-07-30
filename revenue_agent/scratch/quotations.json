@@ -852,5 +852,33 @@
     "notes": "Structured supplier quotation reply",
     "id": "quote-822217",
     "createdAt": "2026-07-30T13:57:02.217Z"
+  },
+  {
+    "rfqNumber": "RFQ-643936",
+    "missionId": "mission-proc-643936",
+    "supplierName": "srinithi",
+    "price": 1000,
+    "currency": "INR",
+    "moq": 15,
+    "deliveryDays": 2,
+    "paymentTerms": "Net 30 Days",
+    "validityDays": 7,
+    "notes": "Structured supplier quotation reply",
+    "id": "quote-295260",
+    "createdAt": "2026-07-30T15:44:55.260Z"
+  },
+  {
+    "rfqNumber": "RFQ-643936",
+    "missionId": "mission-proc-643936",
+    "supplierName": "srinithi",
+    "price": 1000,
+    "currency": "INR",
+    "moq": 15,
+    "deliveryDays": 7,
+    "paymentTerms": "Net 30 Days",
+    "validityDays": 7,
+    "notes": "Structured supplier quotation reply",
+    "id": "quote-320401",
+    "createdAt": "2026-07-30T15:45:20.401Z"
   }
 ]

@@ -609,5 +609,18 @@
     "supplierContact": "+919361779326",
     "status": "Sent",
     "createdAt": "2026-07-30T13:57:02.067Z"
+  },
+  {
+    "rfqNumber": "RFQ-054696",
+    "missionId": "mission-proc-643936",
+    "sku": "RM-SS-SHEET-15",
+    "materialName": "Stainless Steel",
+    "quantity": 1,
+    "deliveryDate": "2 Days",
+    "terms": "Net 30 Days, Delivery to Peenya Factory",
+    "supplierName": "srinithi",
+    "supplierContact": "+919361779326",
+    "status": "Sent",
+    "createdAt": "2026-07-30T15:40:54.696Z"
   }
 ]

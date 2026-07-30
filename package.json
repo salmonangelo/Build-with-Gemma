@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "npm --prefix revenue_agent run dev",
+    "build": "npm --prefix revenue_agent run build",
+    "start": "npm --prefix revenue_agent run start",
+    "lint": "npm --prefix revenue_agent run lint"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

@@ -232,8 +232,8 @@ export class CommunicationService {
     }
 
     // 3. STEP C: Verify Participant Membership
-    const participants = activeMission.context.missionParticipants || [];
-    const matchedParticipant = participants.find(p => p.supplierId === matchedSupplier!.id || p.supplierName.toLowerCase() === matchedSupplier!.name.toLowerCase());
+    const participants = (activeMission.context as any)?.missionParticipants || [];
+    const matchedParticipant = participants.find((p: any) => p.supplierId === matchedSupplier!.id || p.supplierName.toLowerCase() === matchedSupplier!.name.toLowerCase());
 
     // RULE 2: Participant Membership Check — If resolved supplier is NOT part of the active mission, IGNORE completely!
     if (!matchedParticipant) {

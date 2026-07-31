@@ -15,6 +15,7 @@
 
 import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
+import fs from 'fs';
 import { ProcurementMissionService } from '@/departments/procurement/services/ProcurementMissionService';
 
 export interface GatewayStatus {
@@ -80,14 +81,16 @@ export class CommunicationService {
     if (this.pythonProcess) return;
 
     const possiblePaths = [
-      path.resolve(process.cwd(), 'FinCent_onborading', 'whatsapp.py'),
-      path.resolve(process.cwd(), '..', 'FinCent_onborading', 'whatsapp.py'),
-      path.resolve(process.cwd(), '..', '..', 'FinCent_onborading', 'whatsapp.py')
+      path.join(process.cwd(), 'FinCent_onborading', 'whatsapp.py'),
+      path.join(process.cwd(), '..', 'FinCent_onborading', 'whatsapp.py'),
+      path.join(process.cwd(), 'apps', 'web', 'scripts', 'whatsapp.py'),
+      path.join(process.cwd(), 'revenue_agent', 'whatsapp.py')
     ];
+
     const scriptPath = possiblePaths.find(p => fs.existsSync(p)) || possiblePaths[0];
 
     if (!fs.existsSync(scriptPath)) {
-      console.warn(`⚠️ [CommunicationService] Python WhatsApp Gateway script not found at ${scriptPath}`);
+      console.warn(`⚠️ [CommunicationService] Python WhatsApp script not found at candidate paths: ${possiblePaths.join(', ')}`);
       return;
     }
 
@@ -95,7 +98,6 @@ export class CommunicationService {
 
     try {
       this.pythonProcess = spawn('python', [scriptPath], {
-        cwd: path.dirname(scriptPath),
         stdio: 'inherit',
         detached: false
       });

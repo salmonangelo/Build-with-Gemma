@@ -75,7 +75,7 @@ export class CommunicationService {
   }
 
   /**
-   * Launches the Python Neonize gateway process in the background.
+   * Launches the Python Neonize gateway process in the background with robust path resolution.
    */
   static ensureGatewayRunning() {
     if (this.pythonProcess) return;
@@ -84,16 +84,10 @@ export class CommunicationService {
       path.join(process.cwd(), 'FinCent_onborading', 'whatsapp.py'),
       path.join(process.cwd(), '..', 'FinCent_onborading', 'whatsapp.py'),
       path.join(process.cwd(), 'apps', 'web', 'scripts', 'whatsapp.py'),
-      path.join(process.cwd(), 'revenue_agent', 'whatsapp.py')
+      path.join(__dirname, '..', '..', '..', 'FinCent_onborading', 'whatsapp.py')
     ];
 
     const scriptPath = possiblePaths.find(p => fs.existsSync(p)) || possiblePaths[0];
-
-    if (!fs.existsSync(scriptPath)) {
-      console.warn(`⚠️ [CommunicationService] Python WhatsApp script not found at candidate paths: ${possiblePaths.join(', ')}`);
-      return;
-    }
-
     console.log(`🚀 [CommunicationService] Launching Python WhatsApp Gateway daemon: ${scriptPath}`);
 
     try {

@@ -58,21 +58,25 @@ async function startDev() {
     process.exit(1);
   }
 
-  // 2. Check and automatically start Ollama if not running
-  const isRunning = await checkOllamaRunning();
-  if (isRunning) {
-    console.log(`🦙 Ollama server is already online at http://localhost:11434`);
+  // 2. Check AI Engine Mode (Groq API LPU vs Local Ollama Fallback)
+  if (process.env.GROQ_API_KEY) {
+    console.log(`⚡ [AI Engine] Powered by Groq API LPU (${process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'}). Local Ollama startup bypassed.`);
   } else {
-    console.log(`🦙 Starting Ollama (${OLLAMA_MODEL}) automatically...`);
-    ollamaProcess = spawn("ollama", ["run", OLLAMA_MODEL], {
-      shell: true,
-      stdio: "pipe"
-    });
-    spawnedOllama = true;
+    // Only check/start Ollama if GROQ_API_KEY is not configured
+    const isRunning = await checkOllamaRunning();
+    if (isRunning) {
+      console.log(`🦙 Ollama server is online at http://localhost:11434`);
+    } else {
+      console.log(`🦙 GROQ_API_KEY missing. Starting Ollama (${OLLAMA_MODEL}) fallback automatically...`);
+      ollamaProcess = spawn("ollama", ["run", OLLAMA_MODEL], {
+        shell: true,
+        stdio: "pipe"
+      });
+      spawnedOllama = true;
 
-    // Give Ollama a short window to initialize
-    await new Promise(res => setTimeout(res, 2500));
-    console.log(`✅ Ollama (${OLLAMA_MODEL}) launched successfully.`);
+      await new Promise(res => setTimeout(res, 2500));
+      console.log(`✅ Ollama (${OLLAMA_MODEL}) fallback launched successfully.`);
+    }
   }
 
   // 3. Attach signal listeners for graceful shutdown
@@ -80,7 +84,7 @@ async function startDev() {
   const handleSignal = (signal: string) => {
     if (cleaningUp) return;
     cleaningUp = true;
-    console.log(`\n⏹️ Received ${signal}. Stopping dev server and Ollama...`);
+    console.log(`\n⏹️ Received ${signal}. Stopping dev server...`);
     cleanupAndExit(0);
   };
 

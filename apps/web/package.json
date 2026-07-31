@@ -1,5 +1,5 @@
 {
-  "name": "@mission-os/web",
+  "name": "revenue_agent",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,8 +10,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@mission-os/database": "*",
-    "@mission-os/shared": "*",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@types/qrcode": "^1.5.6",

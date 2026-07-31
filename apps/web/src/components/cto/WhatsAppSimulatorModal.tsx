@@ -69,7 +69,7 @@ export const WhatsAppSimulatorModal: React.FC = () => {
             </div>
             <div>
               <h4 className="font-bold text-sm leading-tight">AI CTO WhatsApp Business Input</h4>
-              <p className="text-[10px] text-emerald-100 font-medium">Online • Connected to Ollama (gemma4:cloud)</p>
+              <p className="text-[10px] text-emerald-100 font-medium">Online • Powered by Groq API (llama-3.3-70b-versatile)</p>
             </div>
           </div>
           <button 

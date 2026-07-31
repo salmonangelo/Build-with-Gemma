@@ -40,6 +40,31 @@ export class CommunicationService {
   private static serviceStartTime: number = Date.now();
 
   /**
+   * Resolves the exact absolute path to the Python whatsapp.py gateway script.
+   */
+  private static findWhatsappScript(): string {
+    const cwd = process.cwd();
+    const candidates = [
+      path.resolve(cwd, '..', 'FinCent_onborading', 'whatsapp.py'),
+      path.resolve(cwd, 'FinCent_onborading', 'whatsapp.py'),
+      path.resolve(__dirname, '..', '..', '..', '..', 'FinCent_onborading', 'whatsapp.py'),
+      path.resolve(__dirname, '..', '..', '..', 'FinCent_onborading', 'whatsapp.py'),
+      'C:\\Users\\Asus\\Desktop\\BUILD_WITH_GEMMA\\FinCent_onborading\\whatsapp.py'
+    ];
+
+    for (const p of candidates) {
+      try {
+        if (fs.existsSync(p)) {
+          return p;
+        }
+      } catch (e) {
+        // ignore resolution error
+      }
+    }
+    return 'C:\\Users\\Asus\\Desktop\\BUILD_WITH_GEMMA\\FinCent_onborading\\whatsapp.py';
+  }
+
+  /**
    * Clears old WhatsApp session database files and forces generation of a fresh QR code.
    */
   static async resetSession(): Promise<GatewayStatus> {
@@ -80,14 +105,7 @@ export class CommunicationService {
   static ensureGatewayRunning() {
     if (this.pythonProcess) return;
 
-    const possiblePaths = [
-      path.join(process.cwd(), 'FinCent_onborading', 'whatsapp.py'),
-      path.join(process.cwd(), '..', 'FinCent_onborading', 'whatsapp.py'),
-      path.join(process.cwd(), 'apps', 'web', 'scripts', 'whatsapp.py'),
-      path.join(__dirname, '..', '..', '..', 'FinCent_onborading', 'whatsapp.py')
-    ];
-
-    const scriptPath = possiblePaths.find(p => fs.existsSync(p)) || possiblePaths[0];
+    const scriptPath = this.findWhatsappScript();
     console.log(`🚀 [CommunicationService] Launching Python WhatsApp Gateway daemon: ${scriptPath}`);
 
     try {

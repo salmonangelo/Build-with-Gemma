@@ -19,7 +19,8 @@ import {
   OctagonX,
   Truck,
   Building2,
-  Check
+  Check,
+  RotateCcw
 } from 'lucide-react';
 
 export const dynamic = "force-dynamic";
@@ -55,6 +56,7 @@ export default function RealWhatsAppSupplierAgentPage() {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
   const [showQrModal, setShowQrModal] = useState<boolean>(false);
   const [connecting, setConnecting] = useState<boolean>(false);
+  const [isCancelling, setIsCancelling] = useState<boolean>(false);
 
   // 2. Suppliers Master State (Phase 1)
   const [suppliers, setSuppliers] = useState<SupplierMasterItem[]>([]);
@@ -410,7 +412,8 @@ export default function RealWhatsAppSupplierAgentPage() {
 
   // Stop / Cancel Mission Click
   const handleCancelMission = async () => {
-    if (!activeMission) return;
+    if (!activeMission || isCancelling) return;
+    setIsCancelling(true);
     try {
       const res = await fetch(`/api/procurement/missions/${activeMission.id}`, {
         method: 'POST',
@@ -429,11 +432,13 @@ export default function RealWhatsAppSupplierAgentPage() {
           poConfirmationSent: false,
           missionCompleted: false
         }));
-        fetchSuppliers();
-        fetchMissions();
+        await fetchSuppliers();
+        await fetchMissions();
       }
     } catch (e) {
       console.error('[Cancel mission error]:', e);
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -863,20 +868,37 @@ export default function RealWhatsAppSupplierAgentPage() {
                 {missionStatusText}
               </h3>
             </div>
-            {activeMission && activeMission.status !== 'Completed' && activeMission.status !== 'Cancelled' && (
+            {activeMission && (
               <div className="flex items-center gap-4">
                 <div className="text-right hidden sm:block">
                   <span className="text-xs text-[var(--text-muted)]">Target Material: </span>
                   <strong className="text-xs text-[var(--primary)] font-bold">{activeMission.itemName} ({activeMission.context?.quantityNeeded || 15}kg)</strong>
                 </div>
-                <button
-                  onClick={handleCancelMission}
-                  className="px-3 py-1.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
-                  title="Stop / Cancel Ongoing Mission"
-                >
-                  <OctagonX size={14} />
-                  <span>Stop Mission</span>
-                </button>
+                {activeMission.status !== 'Completed' && activeMission.status !== 'Cancelled' ? (
+                  <button
+                    onClick={handleCancelMission}
+                    disabled={isCancelling}
+                    className="px-3 py-1.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Stop / Cancel Ongoing Mission"
+                  >
+                    {isCancelling ? (
+                      <RefreshCw size={14} className="animate-spin text-red-400" />
+                    ) : (
+                      <OctagonX size={14} />
+                    )}
+                    <span>{isCancelling ? 'Stopping...' : 'Stop Mission'}</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleCancelMission}
+                    disabled={isCancelling}
+                    className="px-3 py-1.5 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] hover:bg-[var(--bg-card-hover)] text-[var(--text-muted)] rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                    title="Mission is completed or cancelled. Click to reset."
+                  >
+                    <RotateCcw size={14} />
+                    <span>Reset Mission</span>
+                  </button>
+                )}
               </div>
             )}
           </div>

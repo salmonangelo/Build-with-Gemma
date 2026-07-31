@@ -152,10 +152,10 @@ export default function RealWhatsAppSupplierAgentPage() {
       if (data.success && data.missions.length > 0) {
         // Most recent mission is always data.missions[0]
         const current = data.missions[0];
-        setActiveMission(current);
 
         if (current.status === 'Cancelled') {
-          setMissionStatusText('🔴 Mission Cancelled');
+          setActiveMission(null);
+          setMissionStatusText('🟢 System Ready for Next Mission');
           setChecklist({
             rfqSent: false,
             quotesReceived: false,
@@ -166,6 +166,8 @@ export default function RealWhatsAppSupplierAgentPage() {
           });
           return;
         }
+
+        setActiveMission(current);
 
         // Update Checklist & Status Text based on mission stage
         if (current.currentStage === 'Waiting_for_Quotations' || current.currentStage === 'WAITING_FOR_QUOTES' || current.currentStage === 'COLLECTING_QUOTES') {

@@ -41,11 +41,17 @@ export class ProcurementMissionService {
     triggerType: string = 'Manual',
     reason: string = 'User manual procurement request'
   ): Promise<ProcurementMissionEntity> {
+    // Complete/close any previous active/paused missions to ensure system is 100% ready for the new restock mission
     const existing = await ProcurementMissionRepository.getAllMissions();
-    const active = existing.find(m => m.status === 'Active' || m.status === 'Paused_Approval');
-    if (active) {
-      console.log(`⚠️ [ProcurementMissionService] Active mission '${active.id}' already in progress.`);
-      return active;
+    for (const m of existing) {
+      if (m.status === 'Active' || m.status === 'Paused_Approval') {
+        m.status = 'Completed';
+        await ProcurementMissionRepository.saveMission(m);
+        const participants = m.context?.missionParticipants || [];
+        for (const p of participants) {
+          await SupplierRepository.updateSupplierStatus(p.supplierName, 'Available', null);
+        }
+      }
     }
 
     const randomId = `mission-proc-${Math.floor(Math.random() * 900000 + 100000)}`;

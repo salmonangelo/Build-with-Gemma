@@ -156,14 +156,15 @@ export default function RealWhatsAppSupplierAgentPage() {
         if (current.status === 'Cancelled') {
           setActiveMission(null);
           setMissionStatusText('🟢 System Ready for Next Mission');
-          setChecklist({
+          setChecklist(prev => ({
+            ...prev,
             rfqSent: false,
             quotesReceived: false,
             aiRecommendationReady: false,
             supplierApproved: false,
             poConfirmationSent: false,
             missionCompleted: false
-          });
+          }));
           return;
         }
 

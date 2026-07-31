@@ -5,7 +5,7 @@ import {
   LuSparkles, 
   LuBuilding2, 
   LuClock, 
-  LuCheckCircle2, 
+  LuCheckCircle, 
   LuArrowUpRight 
 } from 'react-icons/lu';
 import { BusinessSnapshotBar } from './BusinessSnapshotBar';

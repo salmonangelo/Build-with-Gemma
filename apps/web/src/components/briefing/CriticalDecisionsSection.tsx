@@ -6,7 +6,7 @@ import {
   LuShieldAlert, 
   LuTrendingUp, 
   LuArrowRight, 
-  LuCheckCircle2, 
+  LuCheckCircle, 
   LuSparkles,
   LuTag,
   LuWallet,

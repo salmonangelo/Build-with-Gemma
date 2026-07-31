@@ -26,6 +26,15 @@ async function runManualWhatsAppJidResolutionVerification() {
   if (varan) await SupplierRepository.updateSupplierJid(varan.id, '204118762311452');
   if (sathur) await SupplierRepository.updateSupplierJid(sathur.id, '209123456789654');
 
+  // Step 0: Clear any leftover active missions
+  const allM = await ProcurementMissionRepository.getAllMissions();
+  for (const m of allM) {
+    if (m.status === 'Active' || m.status === 'Paused_Approval') {
+      m.status = 'Completed';
+      await ProcurementMissionRepository.save(m);
+    }
+  }
+
   // Step 2: Initialize Procurement Mission for Stainless Steel
   console.log('\n--- Step 2: Initialize Stainless Steel Mission ---');
   const mission = await ProcurementMissionService.createMission(
@@ -34,7 +43,8 @@ async function runManualWhatsAppJidResolutionVerification() {
     15
   );
 
-  const participants = mission.context.missionParticipants || [];
+  const updatedMission = await ProcurementMissionRepository.findById(mission.id);
+  const participants = updatedMission?.context?.missionParticipants || [];
   console.log(`✅ [PASS] Mission Created: '${mission.id}' at ${mission.startedAt} with ${participants.length} eligible Stainless Steel participant(s): ${participants.map((p: any) => p.supplierName).join(', ')}`);
 
   // Step 3: Historical Message Filtering Test (Message from Yesterday)

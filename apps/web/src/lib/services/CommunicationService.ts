@@ -79,17 +79,31 @@ export class CommunicationService {
   static ensureGatewayRunning() {
     if (this.pythonProcess) return;
 
-    const scriptPath = path.join(process.cwd(), '..', 'FinCent_onborading', 'whatsapp.py');
+    const possiblePaths = [
+      path.resolve(process.cwd(), 'FinCent_onborading', 'whatsapp.py'),
+      path.resolve(process.cwd(), '..', 'FinCent_onborading', 'whatsapp.py'),
+      path.resolve(process.cwd(), '..', '..', 'FinCent_onborading', 'whatsapp.py')
+    ];
+    const scriptPath = possiblePaths.find(p => fs.existsSync(p)) || possiblePaths[0];
+
+    if (!fs.existsSync(scriptPath)) {
+      console.warn(`⚠️ [CommunicationService] Python WhatsApp Gateway script not found at ${scriptPath}`);
+      return;
+    }
+
     console.log(`🚀 [CommunicationService] Launching Python WhatsApp Gateway daemon: ${scriptPath}`);
 
     try {
       this.pythonProcess = spawn('python', [scriptPath], {
+        cwd: path.dirname(scriptPath),
         stdio: 'inherit',
         detached: false
       });
 
       this.pythonProcess.on('exit', (code) => {
-        console.warn(`⚠️ [CommunicationService] Python Gateway process exited with code ${code}`);
+        if (code !== 0 && code !== null) {
+          console.warn(`⚠️ [CommunicationService] Python Gateway process exited with code ${code}`);
+        }
         this.pythonProcess = null;
       });
     } catch (err) {

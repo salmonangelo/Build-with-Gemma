@@ -43,9 +43,12 @@ export class ProcurementMissionService {
   ): Promise<ProcurementMissionEntity> {
     const existing = await ProcurementMissionRepository.getAllMissions();
     const active = existing.find(m => m.status === 'Active' || m.status === 'Paused_Approval');
-    if (active) {
-      console.log(`⚠️ [ProcurementMissionService] Active mission '${active.id}' already in progress.`);
+    if (active && active.itemName === itemName && active.context?.missionParticipants?.length > 0) {
+      console.log(`ℹ️ [ProcurementMissionService] Continuing active mission '${active.id}' for ${itemName}.`);
       return active;
+    } else if (active) {
+      active.status = 'Completed';
+      await ProcurementMissionRepository.saveMission(active);
     }
 
     const randomId = `mission-proc-${Math.floor(Math.random() * 900000 + 100000)}`;
@@ -151,6 +154,7 @@ export class ProcurementMissionService {
       confirmed: false
     }));
 
+    if (!mission.context) mission.context = {} as any;
     mission.context.missionParticipants = participants;
     mission.context.expectedQuotesCount = participants.length;
     mission.context.quotesReceivedCount = 0;

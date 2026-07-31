@@ -1,0 +1,9 @@
+{
+  "name": "@mission-os/database",
+  "version": "0.1.0",
+  "main": "index.ts",
+  "types": "index.ts",
+  "dependencies": {
+    "@prisma/client": "^7.8.0"
+  }
+}

@@ -218,3 +218,84 @@ model OperationState {
   lastUpdated    DateTime @default(now())
 }
 
+// ============================================================================
+// MISSION-DRIVEN PROCUREMENT & BUSINESS EVENT MODELS
+// ============================================================================
+
+model ProcurementMission {
+  id             String                 @id
+  sku            String
+  itemName       String
+  quantityNeeded Int                    @default(0)
+  status         String                 // "Active" | "Paused_Approval" | "Completed" | "Failed"
+  currentStage   String                 // "Waiting_for_Quotations" | "Quotation_Comparison" | "Owner_Approval" | "Purchase_Order" | "Mission_Complete"
+  startedAt      String
+  context        Json                   // Complete mission context snapshot
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  participants   MissionParticipant[]
+  quotes         QuoteRecord[]
+  purchaseOrders PurchaseOrderRecord[]
+  rfqs           RFQRecord[]
+}
+
+model MissionParticipant {
+  id                 String             @id @default(cuid())
+  missionId          String
+  mission            ProcurementMission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  supplierId         Int?
+  supplierName       String
+  contactChannel     String
+  whatsappJid        String?
+  rfqReference       String?
+  quoteReceived      Boolean            @default(false)
+  selected           Boolean            @default(false)
+  confirmationStatus String?
+  createdAt          DateTime           @default(now())
+}
+
+model QuoteRecord {
+  id           String             @id @default(cuid())
+  missionId    String
+  mission      ProcurementMission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  supplierId   Int?
+  supplierName String
+  price        Float
+  deliveryDays Int
+  remarks      String?
+  quoteData    Json?
+  createdAt    DateTime           @default(now())
+}
+
+model PurchaseOrderRecord {
+  id           String             @id @default(cuid())
+  poNumber     String             @unique
+  missionId    String
+  mission      ProcurementMission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  supplierId   Int?
+  supplierName String
+  status       String             // "Issued" | "Supplier_Confirmed" | "Fulfilled" | "Cancelled"
+  totalAmount  Float
+  items        Json
+  createdDate  String
+  createdAt    DateTime           @default(now())
+}
+
+model RFQRecord {
+  id           String             @id @default(cuid())
+  missionId    String
+  mission      ProcurementMission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  supplierId   Int?
+  supplierName String
+  sku          String
+  quantity     Int
+  status       String             // "Sent" | "Acknowledged" | "Replied" | "Expired"
+  sentAt       DateTime           @default(now())
+}
+
+model BusinessEvent {
+  id        String   @id @default(cuid())
+  eventType String
+  payload   Json
+  createdAt DateTime @default(now())
+}

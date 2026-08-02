@@ -227,7 +227,7 @@ export class CommunicationService {
 
     // RULE 1: Unknown JID Check — If incoming JID is not present in Supplier Master, IGNORE completely!
     if (!matchedSupplier) {
-      console.log(`ℹ️ [CommunicationService] Ignored unknown WhatsApp message from ${fromPhone}: JID not found in Supplier Master.`);
+      console.log(`ℹ️ [CommunicationService] Ignored unknown WhatsApp message ['${messageText}'] from ${fromPhone}: JID not found in Supplier Master.`);
       return { handled: false, reply: 'Ignored (Unknown JID / Not in Supplier Master)' };
     }
 
@@ -237,7 +237,7 @@ export class CommunicationService {
 
     // RULE 2: Participant Membership Check — If resolved supplier is NOT part of the active mission, IGNORE completely!
     if (!matchedParticipant) {
-      console.log(`ℹ️ [CommunicationService] Ignored message from ${matchedSupplier.name} (${fromPhone}): Supplier is not a participant of active procurement mission ${activeMission.id}.`);
+      console.log(`ℹ️ [CommunicationService] Ignored message ['${messageText}'] from ${matchedSupplier.name} (${fromPhone}): Supplier is not a participant of active procurement mission ${activeMission.id}.`);
       return { handled: false, reply: 'Ignored (Supplier not a participant of active procurement mission)' };
     }
 

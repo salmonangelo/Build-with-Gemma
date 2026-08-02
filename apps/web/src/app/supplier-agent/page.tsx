@@ -154,8 +154,8 @@ export default function RealWhatsAppSupplierAgentPage() {
         const current = data.missions[0];
 
         if (current.status === 'Cancelled') {
-          setActiveMission(current);
-          setMissionStatusText('🔴 Mission Cancelled');
+          setActiveMission(null);
+          setMissionStatusText('🟢 System Ready for Next Order');
           setChecklist(prev => ({
             ...prev,
             rfqSent: false,
@@ -439,7 +439,8 @@ export default function RealWhatsAppSupplierAgentPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setMissionStatusText('🔴 Mission Cancelled');
+        setActiveMission(null);
+        setMissionStatusText('🟢 System Ready for Next Order');
         setChecklist(prev => ({
           ...prev,
           rfqSent: false,
@@ -450,7 +451,6 @@ export default function RealWhatsAppSupplierAgentPage() {
           missionCompleted: false
         }));
         await fetchSuppliers();
-        await fetchMissions();
       }
     } catch (e) {
       console.error('[Cancel mission error]:', e);

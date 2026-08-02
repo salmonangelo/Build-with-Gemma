@@ -154,8 +154,8 @@ export default function RealWhatsAppSupplierAgentPage() {
         const current = data.missions[0];
 
         if (current.status === 'Cancelled') {
-          setActiveMission(null);
-          setMissionStatusText('🟢 System Ready for Next Mission');
+          setActiveMission(current);
+          setMissionStatusText('🔴 Mission Cancelled');
           setChecklist(prev => ({
             ...prev,
             rfqSent: false,
@@ -457,6 +457,22 @@ export default function RealWhatsAppSupplierAgentPage() {
     } finally {
       setIsCancelling(false);
     }
+  };
+
+  // Reset Mission Click (clears cancelled/completed mission state to ready)
+  const handleResetMission = () => {
+    setActiveMission(null);
+    setMissionStatusText('🟢 System Ready for Next Mission');
+    setChecklist(prev => ({
+      ...prev,
+      rfqSent: false,
+      quotesReceived: false,
+      aiRecommendationReady: false,
+      supplierApproved: false,
+      poConfirmationSent: false,
+      missionCompleted: false
+    }));
+    fetchSuppliers();
   };
 
   const participants = activeMission?.context?.missionParticipants || [];
@@ -907,9 +923,8 @@ export default function RealWhatsAppSupplierAgentPage() {
                   </button>
                 ) : (
                   <button
-                    onClick={handleCancelMission}
-                    disabled={isCancelling}
-                    className="px-3 py-1.5 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] hover:bg-[var(--bg-card-hover)] text-[var(--text-muted)] rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                    onClick={handleResetMission}
+                    className="px-3 py-1.5 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] hover:bg-[var(--bg-card-hover)] text-[var(--text-muted)] rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
                     title="Mission is completed or cancelled. Click to reset."
                   >
                     <RotateCcw size={14} />

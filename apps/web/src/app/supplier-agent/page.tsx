@@ -153,9 +153,9 @@ export default function RealWhatsAppSupplierAgentPage() {
         // Most recent mission is always data.missions[0]
         const current = data.missions[0];
 
-        if (current.status === 'Cancelled') {
+        if (current.status === 'Cancelled' || current.status === 'Completed') {
           setActiveMission(null);
-          setMissionStatusText('🟢 System Ready for Next Order');
+          setMissionStatusText('🟢 No Active Mission — Click Restock to Start One');
           setChecklist(prev => ({
             ...prev,
             rfqSent: false,
@@ -440,7 +440,7 @@ export default function RealWhatsAppSupplierAgentPage() {
       const data = await res.json();
       if (data.success) {
         setActiveMission(null);
-        setMissionStatusText('🟢 System Ready for Next Order');
+        setMissionStatusText('🟢 No Active Mission — Click Restock to Start One');
         setChecklist(prev => ({
           ...prev,
           rfqSent: false,
@@ -451,6 +451,7 @@ export default function RealWhatsAppSupplierAgentPage() {
           missionCompleted: false
         }));
         await fetchSuppliers();
+        await fetchConversations();
       }
     } catch (e) {
       console.error('[Cancel mission error]:', e);
@@ -462,7 +463,7 @@ export default function RealWhatsAppSupplierAgentPage() {
   // Reset Mission Click (clears cancelled/completed mission state to ready)
   const handleResetMission = () => {
     setActiveMission(null);
-    setMissionStatusText('🟢 System Ready for Next Mission');
+    setMissionStatusText('🟢 No Active Mission — Click Restock to Start One');
     setChecklist(prev => ({
       ...prev,
       rfqSent: false,
@@ -473,6 +474,7 @@ export default function RealWhatsAppSupplierAgentPage() {
       missionCompleted: false
     }));
     fetchSuppliers();
+    fetchConversations();
   };
 
   const participants = activeMission?.context?.missionParticipants || [];

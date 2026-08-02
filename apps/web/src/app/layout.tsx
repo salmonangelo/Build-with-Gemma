@@ -31,8 +31,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${bricolage.variable}`}>
-      <body className="antialiased font-sans text-[#0f172a] dark:text-[#f8fafc]">
+    <html lang="en" className={`${inter.variable} ${bricolage.variable}`} suppressHydrationWarning>
+      <body className="antialiased font-sans text-[#0f172a] dark:text-[#f8fafc]" suppressHydrationWarning>
         <ThemeProvider>
           <OnboardingProvider>
             <BusinessDataProvider>

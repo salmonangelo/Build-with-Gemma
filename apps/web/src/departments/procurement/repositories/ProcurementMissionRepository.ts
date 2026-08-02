@@ -87,11 +87,14 @@ export class ProcurementMissionRepository {
 
       if (!dbMission) return null;
 
-      // Extract context JSON snapshot
+      // Extract context JSON snapshot and ensure participants are read from context JSON or relation
       const ctx = (dbMission.context as any) || {};
+      const participants = (ctx.missionParticipants && ctx.missionParticipants.length > 0)
+        ? ctx.missionParticipants
+        : (dbMission.participants || []);
+
       const missionEntity: ProcurementMissionEntity = {
         ...ctx,
-        context: ctx,
         id: dbMission.id,
         sku: dbMission.sku,
         itemName: dbMission.itemName,
@@ -99,6 +102,10 @@ export class ProcurementMissionRepository {
         currentStage: dbMission.currentStage as any,
         startedAt: dbMission.startedAt,
         updatedAt: dbMission.updatedAt.toISOString(),
+        context: {
+          ...ctx,
+          missionParticipants: participants
+        },
         progress: STAGE_PROGRESS_MAP[dbMission.currentStage as keyof typeof STAGE_PROGRESS_MAP] || ctx.progress || 50
       };
 
@@ -145,9 +152,12 @@ export class ProcurementMissionRepository {
 
       return dbMissions.map(dbM => {
         const ctx = (dbM.context as any) || {};
+        const participants = (ctx.missionParticipants && ctx.missionParticipants.length > 0)
+          ? ctx.missionParticipants
+          : (dbM.participants || []);
+
         return {
           ...ctx,
-          context: ctx,
           id: dbM.id,
           sku: dbM.sku,
           itemName: dbM.itemName,
@@ -155,6 +165,10 @@ export class ProcurementMissionRepository {
           currentStage: dbM.currentStage as any,
           startedAt: dbM.startedAt,
           updatedAt: dbM.updatedAt.toISOString(),
+          context: {
+            ...ctx,
+            missionParticipants: participants
+          },
           progress: STAGE_PROGRESS_MAP[dbM.currentStage as keyof typeof STAGE_PROGRESS_MAP] || ctx.progress || 50
         };
       });

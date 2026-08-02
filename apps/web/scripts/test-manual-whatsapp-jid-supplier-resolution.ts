@@ -69,7 +69,7 @@ async function runManualWhatsAppJidResolutionVerification() {
   }
 
   const missionAfterSrinidhi = await ProcurementMissionRepository.findById(mission.id);
-  const srinidhiPart = missionAfterSrinidhi?.context?.missionParticipants?.find((p: any) => p.supplierName.toLowerCase().includes('srinidhi'));
+  const srinidhiPart = missionAfterSrinidhi?.context?.missionParticipants?.find((p: any) => p.supplierName === 'Srinidhi');
 
   if (!srinidhiPart || !srinidhiPart.quoteReceived || srinidhiPart.quoteData?.price !== 75) {
     throw new Error(`❌ Test Failed! Srinidhi quote not assigned properly. Got: ${JSON.stringify(srinidhiPart)}`);

@@ -1,21 +1,89 @@
-# Build With Gemma — Revenue Intelligence & Autonomous Procurement Platform (FinCent)
+# Mission-OS ERP — Monorepo Architecture & Database Guide
 
-An enterprise-grade **Revenue Intelligence & Autonomous Procurement Platform** designed for manufacturing MSMEs. Built with **Next.js 15**, **React 19**, **PostgreSQL (Prisma ORM)**, **Go-Neonize Python WhatsApp Gateway**, and **Groq LPU / Ollama AI**.
+Production-grade, mission-driven Enterprise Resource Planning (ERP) platform built with Next.js, Supabase PostgreSQL, Prisma ORM, and WhatsApp Real-time Integration.
+
+## 🏗️ Monorepo Structure
+
+The project is structured as an npm workspace monorepo:
+
+```text
+mission-os/
+│
+├── apps/
+│   ├── web/                 # Primary Next.js ERP application (@mission-os/web)
+│   ├── admin/               # Admin dashboard (future)
+│   └── mobile/              # Field operations mobile app (future)
+│
+├── packages/
+│   ├── database/            # Shared Prisma Client wrapper (@mission-os/database)
+│   └── shared/              # Domain types and constants (@mission-os/shared)
+│
+├── prisma/
+│   └── schema.prisma        # Shared Supabase PostgreSQL schema
+│
+├── .gitignore               # Strict git hygiene configuration
+├── package.json             # Root npm workspace manifest
+└── README.md                # Project documentation
+```
 
 ---
 
-## 📌 Features & Highlights
+## 🛢️ Database Layer (Supabase PostgreSQL & Prisma ORM)
 
-- 🤖 **Autonomous Procurement Missions**: Automatically calculates low stock thresholds and initializes supplier discovery, RFQ dispatch, quote evaluation, and purchase order confirmation.
-- 📱 **Real-Time WhatsApp Supplier Integration**: Direct bi-directional messaging with raw supplier WhatsApp numbers and JID resolution.
-- 📊 **AI Quotation Comparison**: Ingests unstructured supplier replies over WhatsApp, parses pricing, lead times, and payment terms, and ranks quotes automatically.
-- ⚡ **Multi-Material Support**: Dynamic material restock for Stainless Steel (SS-15), Mild Steel (MS-20), and Copper (CU-08).
-- 🛑 **Full Mission Controls**: Instant **Stop Mission** cancellation, supplier state release, and **Reset Mission** reset to ready.
-- 🛡️ **Supplier Master Data Management**: Persistent storage for supplier profiles, WhatsApp JIDs, contact channels, and reliability ratings.
+All persistence has been migrated from local JSON files to PostgreSQL. The schema includes:
+
+- **`ProcurementMission`**: Primary source of truth for raw material restock missions.
+- **`MissionParticipant`**: Eligible suppliers invited to participate in active missions.
+- **`QuoteRecord`**: Supplier quotations received deterministically via WhatsApp.
+- **`PurchaseOrderRecord`**: Approved POs dispatched to selected winning suppliers.
+- **`RFQRecord`**: Corporate RFQ letter dispatch logs.
+- **`BusinessEvent`**: System-wide audit logs and event notifications.
+- **`Supplier`**: ERP Master vendor registry with manual `whatsappJid` mapping.
+- **`InventoryItem`**: Real-time warehouse inventory balances and threshold alerts.
 
 ---
 
-## 🏗️ System Architecture
+## 🚀 Quick Start (Local Setup)
+
+### 1. Install Dependencies
+Run from the workspace root:
+```bash
+npm install
+```
+
+### 2. Configure Environment Variables
+Create a `.env` file in `apps/web/.env`:
+```env
+DATABASE_URL="postgresql://postgres:password@localhost:5432/revenue_intelligence"
+PORT=3000
+```
+
+### 3. Sync Database Schema
+```bash
+npm run prisma:push
+```
+
+### 4. Run Development Server
+```bash
+npm run dev
+```
+
+### 5. Build for Production
+```bash
+npm run build
+```
+
+---
+
+## 🔒 Security & Git Hygiene
+
+The repository enforces strict `.gitignore` patterns:
+- SQLite/database files (`*.db`, `*.sqlite`, `whatsapp_session.db`) are ignored.
+- Authentication sessions (`auth/`, `sessions/`) and `.env` secrets are never committed.
+
+---
+
+## 🤖 Build With Gemma — System Architecture & WhatsApp AI Integration
 
 ```
                        ┌────────────────────────────────────────┐
@@ -82,71 +150,7 @@ An enterprise-grade **Revenue Intelligence & Autonomous Procurement Platform** d
 
 ---
 
-## 🚀 Getting Started & How to Run
-
-### Prerequisites
-- **Node.js**: v20+
-- **npm**: v10+
-- **Python**: v3.10+ (for WhatsApp Daemon)
-- **PostgreSQL**: Local or Docker instance
-
----
-
-### 1. Environment Setup
-
-Create `.env` inside `apps/web/.env` (or project root):
-
-```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/revenue_intelligence?schema=public"
-GROQ_API_KEY="your_groq_api_key_here" # Optional: For Groq LPU AI acceleration
-OLLAMA_MODEL="gemma4:cloud"          # Fallback AI model
-```
-
----
-
-### 2. Database Migration & Seeding
-
-Run Prisma setup commands from `apps/web`:
-
-```bash
-cd apps/web
-npx prisma db push
-npx prisma generate
-```
-
----
-
-### 3. Running the Project
-
-You can run commands directly from the project root directory (`BUILD_WITH_GEMMA`):
-
-```bash
-# Option A: Development Mode (Hot Reload + DB Verification)
-npm run dev
-
-# Option B: Production Build & Start
-npm run build
-npm start
-```
-
-Access the app in your browser at: **`http://localhost:3000/supplier-agent`**
-
----
-
-### 4. Running the WhatsApp Gateway Daemon (Optional for Live WhatsApp)
-
-In a separate terminal window:
-
-```bash
-cd FinCent_onborading
-python whatsapp.py
-```
-
-Scan the QR code printed in the terminal or browser modal to pair your WhatsApp account.
-
----
-
-## 🧪 Testing & Verification
+## 🧪 Verification & Manual Testing
 
 Run the manual verification test to check JID resolution, quote ingestion, and state machine completion:
 
@@ -154,31 +158,3 @@ Run the manual verification test to check JID resolution, quote ingestion, and s
 cd apps/web
 npx tsx scripts/test-manual-whatsapp-jid-supplier-resolution.ts
 ```
-
----
-
-## 📂 Repository Structure
-
-```
-BUILD_WITH_GEMMA/
-├── apps/
-│   └── web/
-│       ├── prisma/
-│       │   └── schema.prisma         # Database schema & Prisma models
-│       ├── src/
-│       │   ├── app/                  # Next.js App Router pages & API routes
-│       │   ├── components/           # UI components & modals
-│       │   ├── departments/          # Domain services & state machines
-│       │   └── lib/                  # Database client & communication services
-│       └── scripts/                  # Diagnostic and test scripts
-├── FinCent_onborading/
-│   └── whatsapp.py                   # Python Go-Neonize WhatsApp daemon
-├── package.json                      # Workspace root scripts
-└── README.md                         # Project documentation
-```
-
----
-
-## 📝 License
-
-Distributed under the MIT License.

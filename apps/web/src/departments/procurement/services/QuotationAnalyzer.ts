@@ -39,7 +39,8 @@ export class QuotationAnalyzer {
       const rawWeightedScore = Math.min(100, Math.round((priceScore + deliveryScore + trustScore) * 10) / 10);
       const confidencePercent = Math.min(98, Math.round(rawWeightedScore * 0.96));
 
-      const reasoning = `${q.supplierName} offers unit cost of ₹${q.price.toLocaleString('en-IN')} with ${q.deliveryDays}-day lead time, ${reliabilityScore}% reliability rating, and ${pastExperienceOrders} historical fulfilled orders.`;
+      const safePrice = q.price || (q as any).unitPrice || 0;
+      const reasoning = `${q.supplierName} offers unit cost of ₹${safePrice.toLocaleString('en-IN')} with ${q.deliveryDays || 2}-day lead time, ${reliabilityScore}% reliability rating, and ${pastExperienceOrders} historical fulfilled orders.`;
 
       return {
         supplierName: q.supplierName,

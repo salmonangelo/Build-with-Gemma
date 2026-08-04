@@ -48,7 +48,7 @@ export class QuotationRepository {
           id,
           missionId: quote.missionId,
           supplierName: quote.supplierName,
-          price: quote.unitPrice,
+          price: (quote as any).price || (quote as any).unitPrice || 0,
           deliveryDays: quote.deliveryDays,
           remarks: quote.rawMessageText || quote.remarks || '',
           quoteData: JSON.parse(JSON.stringify(entity))

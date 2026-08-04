@@ -220,21 +220,31 @@ export class CommunicationService {
       }
     }
 
-    // 2. STEP B: Search Supplier Master strictly by WhatsApp JID
+    // 2. STEP B: Search Supplier Master by WhatsApp JID (Prioritizing Active Mission Participants)
     const allSuppliers = await SupplierRepository.getAllSuppliers();
+    const activeParticipants = (activeMission?.context as any)?.missionParticipants || [];
+
+    const isMatch = (supplierJidOrPhone: string | undefined | null) => {
+      if (!supplierJidOrPhone || supplierJidOrPhone.toLowerCase().includes('e.g.')) return false;
+      const cleanTarget = supplierJidOrPhone.replace(/\D/g, '');
+      if (!cleanTarget) return false;
+      return (
+        cleanFrom === cleanTarget ||
+        cleanFrom.includes(cleanTarget) ||
+        cleanTarget.includes(cleanFrom) ||
+        (cleanTarget.length >= 8 && cleanFrom.length >= 8 && cleanFrom.slice(-8) === cleanTarget.slice(-8))
+      );
+    };
+
+    // First try matching suppliers who are active participants in current mission
     let matchedSupplier = allSuppliers.find(s => {
-      if (!s.whatsappJid) return false;
-      const cleanJid = s.whatsappJid.replace(/\D/g, '');
-      if (!cleanJid) return false;
-      return cleanFrom === cleanJid || cleanFrom.includes(cleanJid) || cleanJid.includes(cleanFrom) || (cleanJid.length >= 10 && cleanFrom.endsWith(cleanJid.slice(-10)));
+      const isParticipant = activeParticipants.some((p: any) => p.supplierId === s.id || p.supplierName.toLowerCase() === s.name.toLowerCase());
+      return isParticipant && (isMatch(s.whatsappJid) || isMatch(s.contactChannel));
     });
 
+    // Fallback to any supplier in master
     if (!matchedSupplier) {
-      matchedSupplier = allSuppliers.find(s => {
-        const cleanPhone = s.contactChannel.replace(/\D/g, '');
-        if (!cleanPhone) return false;
-        return cleanFrom === cleanPhone || cleanFrom.includes(cleanPhone) || cleanPhone.includes(cleanFrom) || (cleanPhone.length >= 10 && cleanFrom.endsWith(cleanPhone.slice(-10)));
-      });
+      matchedSupplier = allSuppliers.find(s => isMatch(s.whatsappJid) || isMatch(s.contactChannel));
     }
 
     // If matching Supplier is found for Procurement Mission

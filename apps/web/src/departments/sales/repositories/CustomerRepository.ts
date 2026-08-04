@@ -156,27 +156,28 @@ export class CustomerRepository {
 
     // 1. Check whatsappJid match
     let matched = all.find(c => {
-      if (!c.whatsappJid) return false;
+      if (!c.whatsappJid || c.whatsappJid.toLowerCase().includes('e.g.')) return false;
       const cleanJid = c.whatsappJid.replace(/\D/g, '');
       if (!cleanJid) return false;
       return (
         cleanTarget === cleanJid ||
         cleanTarget.includes(cleanJid) ||
         cleanJid.includes(cleanTarget) ||
-        (cleanJid.length >= 10 && cleanTarget.endsWith(cleanJid.slice(-10)))
+        (cleanJid.length >= 8 && cleanTarget.length >= 8 && cleanTarget.slice(-8) === cleanJid.slice(-8))
       );
     });
 
     // 2. Fallback check contactChannel phone
     if (!matched) {
       matched = all.find(c => {
+        if (!c.contactChannel) return false;
         const cleanPhone = c.contactChannel.replace(/\D/g, '');
         if (!cleanPhone) return false;
         return (
           cleanTarget === cleanPhone ||
           cleanTarget.includes(cleanPhone) ||
           cleanPhone.includes(cleanTarget) ||
-          (cleanPhone.length >= 10 && cleanTarget.endsWith(cleanPhone.slice(-10)))
+          (cleanPhone.length >= 8 && cleanTarget.length >= 8 && cleanTarget.slice(-8) === cleanPhone.slice(-8))
         );
       });
     }

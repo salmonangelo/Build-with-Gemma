@@ -2,12 +2,14 @@
  * ============================================================================
  * MODULE PURPOSE: Sales Mission Domain State Machine & Orchestrator
  * RESPONSIBILITIES:
- *  - Controls Sales Mission lifecycle: Inquiry_Received ➔ Gathering_Details ➔ Margin_Estimated ➔ Quotation_Approved ➔ Quotation_Sent ➔ Order_Confirmed.
- *  - Performs Margin Estimation calculations (Revenue, Estimated Cost, Estimated Margin, Confidence, Reason).
- *  - Manages AI natural conversation flow to collect missing order details.
- *  - Handles Quotation Approval and dispatches official quotes via `CommunicationService.sendWhatsAppMessage()`.
+ *  - Manages automatic Sales Mission onboarding upon customer registration.
+ *  - Sends outgoing WhatsApp messages strictly using Customer Phone Number.
+ *  - Resolves incoming WhatsApp messages strictly using Customer WhatsApp JID.
+ *  - Performs Margin Estimation calculations (Selling Price, Estimated Cost, Gross Margin, Confidence).
+ *  - Manages AI natural conversation flow to collect Quantity, Material, and Delivery Date.
+ *  - Handles Owner Quotation Approval and dispatches official quotes to Customer Phone Number.
  *  - Creates `SalesOrder` records upon customer confirmation.
- *  - Publishes `SalesOrderConfirmed` event to `BusinessEventBus`.
+ *  - Publishes `CustomerOrderCreated` event to `BusinessEventBus`.
  * OWNS: Sales Mission workflow state machine and event publishing for sales orders.
  * SHOULD NOT OWN: Low-level database queries or socket transport logic.
  * ============================================================================
@@ -21,19 +23,17 @@ import { BusinessEventBus } from '@/lib/events/BusinessEventBus';
 
 export class SalesMissionService {
   /**
-   * Initializes a new Sales Mission for a customer inquiry.
+   * Automatically initializes a Sales Mission and sends the initial intro WhatsApp message
+   * to the Customer's Phone Number immediately upon customer registration.
    */
-  static async createMission(
-    customerName: string,
-    contactChannel: string,
-    whatsappJid: string,
-    productName: string = 'CNC Mounting Bracket',
-    quantity: number = 500
-  ): Promise<SalesMissionEntity> {
-    // 1. Close any previous active sales missions for this customer to ensure clean state
+  static async createMissionAndSendIntro(customer: CustomerMasterItem): Promise<SalesMissionEntity> {
+    // 1. Close any previous active sales missions for this customer
     const existing = await SalesMissionRepository.getAllMissions();
     for (const m of existing) {
-      if (m.whatsappJid === whatsappJid || m.contactChannel === contactChannel) {
+      if (
+        (customer.whatsappJid && m.whatsappJid === customer.whatsappJid) ||
+        (customer.contactChannel && m.contactChannel === customer.contactChannel)
+      ) {
         if (m.status === 'Active') {
           m.status = 'Completed';
           m.currentStage = 'Mission_Completed';
@@ -45,60 +45,83 @@ export class SalesMissionService {
     const randomId = `SALES-${Math.floor(Math.random() * 9000 + 1000)}`;
     const nowStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-    // Unit economics benchmark for CNC Mounting Bracket
-    const unitPrice = 450;
-    const unitCost = 280;
-    const estimatedValue = quantity * unitPrice;
-    const estimatedCost = quantity * unitCost;
-    const estimatedMargin = estimatedValue - estimatedCost;
-
     const newMission: SalesMissionEntity = {
       id: randomId,
-      customerName,
-      contactChannel,
-      whatsappJid,
-      productName,
-      quantity,
-      deliveryDate: 'Within 7 Days',
-      location: 'Peenya Industrial Area, Bangalore',
-      specialRequirements: 'Anodized finish with standard wooden crate packaging',
-      estimatedValue,
-      estimatedCost,
-      estimatedMargin,
+      customerId: customer.id,
+      customerName: customer.name,
+      contactChannel: customer.contactChannel,
+      whatsappJid: customer.whatsappJid || '',
+      productName: 'CNC Mounting Bracket', // Product SKU: FG-CNC-BRACKET-01
+      quantity: 0,
+      deliveryDate: '',
+      location: 'Factory Delivery',
+      specialRequirements: 'Stainless Steel',
+      estimatedValue: 0,
+      estimatedCost: 0,
+      estimatedMargin: 0,
       marginConfidence: 'High (96%)',
-      businessReason: 'Standard MSME margin benchmark for precision CNC machining',
+      businessReason: 'Standard MSME precision machining margin benchmark for CNC Mounting Brackets.',
       currentStage: 'Inquiry_Received',
       status: 'Active',
       context: {
-        productName,
-        quantity,
-        unitPrice,
-        unitCost,
-        deliveryDate: 'Within 7 Days',
-        location: 'Peenya Industrial Area, Bangalore',
-        specialRequirements: 'Anodized finish with standard wooden crate packaging'
+        productSku: 'FG-CNC-BRACKET-01',
+        productName: 'CNC Mounting Bracket',
+        customerName: customer.name,
+        contactChannel: customer.contactChannel,
+        whatsappJid: customer.whatsappJid,
+        quantity: 0,
+        material: '',
+        deliveryDate: ''
       },
       milestones: [
         {
           timestamp: nowStr,
-          stage: 'Inquiry_Received',
-          text: `Inquiry received from ${customerName} for ${quantity} units of ${productName}.`,
-          actor: 'Customer'
+          stage: 'Customer_Registered',
+          text: `Customer ${customer.name} registered. Sales Mission '${randomId}' created automatically.`,
+          actor: 'System'
         }
       ]
     };
 
     const saved = await SalesMissionRepository.saveMission(newMission);
-    console.log(`🚀 [SalesMissionService] Created Sales Mission '${saved.id}' for ${customerName} (${productName}).`);
+    console.log(`🚀 [SalesMissionService] Sales Mission '${saved.id}' created automatically for ${customer.name}.`);
 
-    // Emit Business Event to Event Bus
+    // 2. Immediately send initial intro WhatsApp message to Customer PHONE NUMBER
+    const introMsg = `Hello ${customer.name},
+
+Thank you for connecting with us.
+
+We specialize in manufacturing CNC Mounting Brackets and have several years of experience producing precision components.
+
+To prepare the most suitable quotation, could you please share:
+
+• Quantity required
+• Preferred material
+• Expected delivery date
+
+Looking forward to your response.`;
+
+    // Dispatch message via CommunicationService to PHONE NUMBER (not JID)
+    await CommunicationService.send('whatsapp', saved.id, customer.contactChannel, introMsg, 'Sales Agent');
+
+    saved.milestones = saved.milestones || [];
+    saved.milestones.push({
+      timestamp: nowStr,
+      stage: 'Introduction_Sent',
+      text: `Initial introduction & requirements inquiry sent to ${customer.contactChannel} over WhatsApp.`,
+      actor: 'Sales Agent'
+    });
+
+    await SalesMissionRepository.saveMission(saved);
+
+    // Publish Business Event
     BusinessEventBus.publish({
       id: `evt-sales-${saved.id}`,
-      type: 'SalesInquiryReceivedEvent',
+      type: 'SalesMissionCreated',
       timestamp: nowStr,
-      source: 'Sales Gateway',
-      summary: `Sales Mission '${saved.id}' initialized for ${customerName} (${quantity} units of ${productName})`,
-      details: { missionId: saved.id, customerName, productName, quantity, estimatedValue },
+      source: 'Sales Department',
+      summary: `Sales Mission '${saved.id}' initialized for ${customer.name}`,
+      details: { missionId: saved.id, customerName: customer.name, contactChannel: customer.contactChannel },
       deepLink: '/sales-agent'
     });
 
@@ -106,159 +129,157 @@ export class SalesMissionService {
   }
 
   /**
-   * Processes incoming customer WhatsApp messages for Sales Missions.
+   * Processes incoming customer WhatsApp messages resolved strictly by Customer WhatsApp JID.
    */
   static async processIncomingCustomerWhatsAppEvent(
-    fromPhone: string,
+    fromJid: string,
     messageText: string,
     customer: CustomerMasterItem
   ): Promise<{ handled: boolean; reply?: string }> {
     const allMissions = await SalesMissionRepository.getAllMissions();
-    let activeMission = allMissions.find(m => 
-      m.status === 'Active' && 
-      (m.whatsappJid === customer.whatsappJid || m.contactChannel === customer.contactChannel || m.customerName.toLowerCase() === customer.name.toLowerCase())
+    let activeMission = allMissions.find(m =>
+      m.status === 'Active' &&
+      (
+        (customer.whatsappJid && m.whatsappJid === customer.whatsappJid) ||
+        (customer.contactChannel && m.contactChannel === customer.contactChannel) ||
+        (m.customerName.toLowerCase() === customer.name.toLowerCase())
+      )
     );
 
-    // Auto-create active mission if none exists
+    // Auto-create sales mission if none active for registered customer
     if (!activeMission) {
-      activeMission = await this.createMission(
-        customer.name,
-        customer.contactChannel,
-        customer.whatsappJid || fromPhone,
-        customer.interestedProduct || 'CNC Mounting Bracket',
-        500
-      );
+      activeMission = await this.createMissionAndSendIntro(customer);
     }
 
     const nowStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
     const textLower = messageText.toLowerCase();
 
-    // STAGE 1: ORDER CONFIRMATION CHECK
+    // STAGE A: CUSTOMER ORDER CONFIRMATION CHECK
     if (
-      activeMission.currentStage === 'Quotation_Sent' || 
+      activeMission.currentStage === 'Quotation_Sent' ||
       activeMission.currentStage === 'Quotation_Approved' ||
-      textLower.includes('confirm') || 
-      textLower.includes('accept') || 
-      textLower.includes('proceed') || 
-      textLower.includes('yes') || 
+      textLower.includes('confirm') ||
+      textLower.includes('accept') ||
+      textLower.includes('proceed') ||
+      textLower.includes('yes') ||
       textLower.includes('approved')
     ) {
-      if (textLower.includes('confirm') || textLower.includes('accept') || textLower.includes('proceed') || textLower.includes('yes') || textLower.includes('approved') || activeMission.currentStage === 'Quotation_Sent') {
-        activeMission.currentStage = 'Order_Confirmed';
-        activeMission.status = 'Completed';
-        
-        activeMission.milestones = activeMission.milestones || [];
-        activeMission.milestones.push({
-          timestamp: nowStr,
-          stage: 'Order_Confirmed',
-          text: `Customer ${customer.name} confirmed quotation via WhatsApp. Sales Order created.`,
-          actor: 'Customer'
-        });
-
-        const orderNum = `SO-2026-${Math.floor(Math.random() * 9000 + 1000)}`;
-        const salesOrder = await SalesOrderRepository.createOrder({
-          id: `so-${Date.now()}`,
-          orderNumber: orderNum,
-          missionId: activeMission.id,
-          customerName: customer.name,
-          productName: activeMission.productName,
-          quantity: activeMission.quantity || 500,
-          unitPrice: 450,
-          totalValue: activeMission.estimatedValue || (activeMission.quantity * 450),
-          deliveryDate: activeMission.deliveryDate || 'Within 7 Days',
-          location: activeMission.location || 'Peenya Industrial Area, Bangalore',
-          status: 'Confirmed'
-        });
-
-        await SalesMissionRepository.saveMission(activeMission);
-
-        // Send confirmation receipt to customer over WhatsApp
-        const replyText = `✅ ORDER CONFIRMED!\n\nThank you ${customer.name}. Your Sales Order ${orderNum} for ${activeMission.quantity} units of ${activeMission.productName} has been locked into MissionOS ERP.\n\nTotal Order Value: ₹${salesOrder.totalValue.toLocaleString('en-IN')}\nTarget Delivery: ${salesOrder.deliveryDate}\n\nOur operations team will begin production scheduling immediately.`;
-        await CommunicationService.sendWhatsAppMessage(customer.whatsappJid || customer.contactChannel, replyText, activeMission.id, 'Sales Agent');
-
-        // CRITICAL REQUIREMENT: Publish SalesOrderConfirmed Business Event
-        BusinessEventBus.publish({
-          id: `evt-so-${salesOrder.id}`,
-          type: 'SalesOrderConfirmed',
-          timestamp: nowStr,
-          source: 'Sales Department',
-          summary: `Sales Order ${orderNum} confirmed for ${customer.name} (Value: ₹${salesOrder.totalValue.toLocaleString('en-IN')})`,
-          details: {
-            orderId: salesOrder.id,
-            orderNumber: salesOrder.orderNumber,
-            missionId: activeMission.id,
-            customerName: customer.name,
-            productName: activeMission.productName,
-            quantity: activeMission.quantity,
-            totalValue: salesOrder.totalValue,
-            deliveryDate: salesOrder.deliveryDate,
-            location: salesOrder.location
-          },
-          deepLink: '/sales-agent'
-        });
-
-        return { handled: true, reply: replyText };
+      if (
+        textLower.includes('confirm') ||
+        textLower.includes('accept') ||
+        textLower.includes('proceed') ||
+        textLower.includes('yes') ||
+        textLower.includes('approved') ||
+        activeMission.currentStage === 'Quotation_Sent'
+      ) {
+        return this.confirmCustomerOrder(activeMission, customer, messageText);
       }
     }
 
-    // STAGE 2: DETAIL GATHERING & PARSING
+    // STAGE B: PARSE QUANTITY, MATERIAL, AND DELIVERY DATE
+    const ctx = activeMission.context || {};
+
+    // 1. Parse Quantity (e.g. "500", "need 500", "1000 pcs")
     const qtyMatch = messageText.match(/(\d+)\s*(pcs|units|pieces|brackets)?/i);
     if (qtyMatch && qtyMatch[1]) {
       const parsedQty = parseInt(qtyMatch[1], 10);
       if (parsedQty > 0) {
         activeMission.quantity = parsedQty;
-        activeMission.estimatedValue = parsedQty * 450;
-        activeMission.estimatedCost = parsedQty * 280;
-        activeMission.estimatedMargin = activeMission.estimatedValue - activeMission.estimatedCost;
+        ctx.quantity = parsedQty;
       }
     }
 
-    if (textLower.includes('day') || textLower.includes('week') || textLower.includes('monday') || textLower.includes('aug') || textLower.includes('urgent') || textLower.includes('asap')) {
+    // 2. Parse Material (e.g. "stainless steel", "mild steel", "aluminum", "brass")
+    if (textLower.includes('stainless steel') || textLower.includes('ss')) {
+      activeMission.specialRequirements = 'Stainless Steel';
+      ctx.material = 'Stainless Steel';
+    } else if (textLower.includes('mild steel') || textLower.includes('ms')) {
+      activeMission.specialRequirements = 'Mild Steel';
+      ctx.material = 'Mild Steel';
+    } else if (textLower.includes('aluminum') || textLower.includes('aluminium')) {
+      activeMission.specialRequirements = 'Aluminum';
+      ctx.material = 'Aluminum';
+    } else if (textLower.includes('brass') || textLower.includes('copper')) {
+      activeMission.specialRequirements = 'Brass';
+      ctx.material = 'Brass';
+    }
+
+    // 3. Parse Delivery Date (e.g. "15 days", "2 weeks", "next monday", "aug 15")
+    if (
+      textLower.includes('day') ||
+      textLower.includes('week') ||
+      textLower.includes('monday') ||
+      textLower.includes('urgent') ||
+      textLower.includes('asap') ||
+      textLower.includes('date')
+    ) {
       activeMission.deliveryDate = messageText;
+      ctx.deliveryDate = messageText;
     }
 
-    if (textLower.includes('bangalore') || textLower.includes('peenya') || textLower.includes('delhi') || textLower.includes('mumbai') || textLower.includes('finish') || textLower.includes('coating')) {
-      activeMission.location = messageText;
-    }
+    activeMission.context = ctx;
 
-    // Determine missing details and generate natural conversation AI response
-    let aiResponse = '';
-    if (!activeMission.quantity || activeMission.quantity === 0) {
-      activeMission.currentStage = 'Gathering_Details';
-      aiResponse = `Hello ${customer.name}, thank you for your inquiry regarding ${activeMission.productName}. May I know your required order quantity?`;
-    } else if (!activeMission.deliveryDate || activeMission.deliveryDate === 'Within 7 Days') {
-      activeMission.currentStage = 'Gathering_Details';
-      aiResponse = `Thank you ${customer.name}. We can manufacture ${activeMission.quantity} units of ${activeMission.productName}. What is your required target delivery date or timeframe?`;
-    } else {
-      // All details gathered -> Move to Margin Estimated & Quotation Draft Ready
-      activeMission.currentStage = 'Margin_Estimated';
-      activeMission.estimatedValue = activeMission.quantity * 450;
-      activeMission.estimatedCost = activeMission.quantity * 280;
-      activeMission.estimatedMargin = activeMission.estimatedValue - activeMission.estimatedCost;
+    const quantity = activeMission.quantity || ctx.quantity || 0;
+    const material = activeMission.specialRequirements || ctx.material || '';
+    const deliveryDate = activeMission.deliveryDate || ctx.deliveryDate || '';
+
+    let aiReply = '';
+
+    // Check if required fields (Quantity, Material, Delivery Date) are all collected
+    if (quantity > 0 && material && deliveryDate) {
+      // Calculate Margin & Selling Price
+      const unitCost = material.includes('Stainless') ? 140 : 120;
+      const unitPrice = material.includes('Stainless') ? 210 : 180;
+      const estimatedCost = quantity * unitCost;
+      const estimatedValue = quantity * unitPrice;
+      const estimatedMargin = estimatedValue - estimatedCost;
+
+      activeMission.estimatedCost = estimatedCost;
+      activeMission.estimatedValue = estimatedValue;
+      activeMission.estimatedMargin = estimatedMargin;
       activeMission.marginConfidence = 'High (96%)';
-      activeMission.businessReason = 'Standard 37.8% margin benchmark for precision CNC machining';
+      activeMission.businessReason = `Calculated for ${quantity} pcs of ${material} CNC Brackets with ${((estimatedMargin / estimatedValue) * 100).toFixed(1)}% gross margin benchmark.`;
+      activeMission.currentStage = 'Margin_Estimated';
 
-      aiResponse = `Thank you ${customer.name}. I have noted your requirement for ${activeMission.quantity} units of ${activeMission.productName} with target delivery (${activeMission.deliveryDate}). Our executive team is preparing your official quotation now.`;
+      aiReply = `Thank you ${customer.name}. I have recorded your requirements:\n• Quantity: ${quantity} pcs\n• Material: ${material}\n• Target Delivery: ${deliveryDate}\n\nOur executive team is reviewing the pricing and will issue your official quotation shortly.`;
+
+      activeMission.milestones = activeMission.milestones || [];
+      activeMission.milestones.push({
+        timestamp: nowStr,
+        stage: 'Requirements_Completed',
+        text: `Customer requirements gathered (Qty: ${quantity}, Material: ${material}, Delivery: ${deliveryDate}). Margin Estimated: ₹${estimatedMargin.toLocaleString('en-IN')}. Awaiting Owner Approval.`,
+        actor: 'Sales Agent'
+      });
+    } else {
+      // Prompt naturally for missing fields
+      activeMission.currentStage = 'Gathering_Details';
+      if (quantity === 0) {
+        aiReply = `Thank you ${customer.name}. Could you please specify the required quantity of CNC Mounting Brackets?`;
+      } else if (!material) {
+        aiReply = `Got it (${quantity} pcs). What is your preferred material (e.g. Stainless Steel or Mild Steel)?`;
+      } else {
+        aiReply = `Noted (${quantity} pcs of ${material}). What is your target delivery date or timeframe?`;
+      }
+
+      activeMission.milestones = activeMission.milestones || [];
+      activeMission.milestones.push({
+        timestamp: nowStr,
+        stage: 'Gathering_Details',
+        text: `Customer: "${messageText}" | AI Reply: "${aiReply}"`,
+        actor: 'Sales Agent'
+      });
     }
-
-    activeMission.milestones = activeMission.milestones || [];
-    activeMission.milestones.push({
-      timestamp: nowStr,
-      stage: activeMission.currentStage,
-      text: `Customer: "${messageText}" | AI Response: "${aiResponse}"`,
-      actor: 'Sales Agent'
-    });
 
     await SalesMissionRepository.saveMission(activeMission);
 
-    // Send AI reply over WhatsApp
-    await CommunicationService.sendWhatsAppMessage(customer.whatsappJid || customer.contactChannel, aiResponse, activeMission.id, 'Sales Agent');
+    // Send AI reply over WhatsApp to Customer PHONE NUMBER
+    await CommunicationService.send('whatsapp', activeMission.id, customer.contactChannel, aiReply, 'Sales Agent');
 
-    return { handled: true, reply: aiResponse };
+    return { handled: true, reply: aiReply };
   }
 
   /**
-   * Approves quotation draft and dispatches official quote to customer over WhatsApp.
+   * Approves quotation draft and dispatches official quote to Customer PHONE NUMBER over WhatsApp.
    */
   static async approveQuotationAndSend(missionId: string): Promise<SalesMissionEntity> {
     const mission = await SalesMissionRepository.findById(missionId);
@@ -267,28 +288,36 @@ export class SalesMissionService {
     const nowStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
     mission.currentStage = 'Quotation_Sent';
 
-    const quoteMsg = `📋 OFFICIAL QUOTATION from Meenakshi Machining\n\nProduct: ${mission.productName}\nQuantity: ${mission.quantity} units\nUnit Price: ₹450/unit\nTotal Quotation Amount: ₹${mission.estimatedValue.toLocaleString('en-IN')}\nTarget Delivery: ${mission.deliveryDate || 'Within 7 Days'}\nDelivery Location: ${mission.location || 'Peenya, Bangalore'}\n\nPlease reply CONFIRMED to lock in this order.`;
+    const quoteMsg = `Quotation
+
+Product: CNC Mounting Bracket
+Material: ${mission.specialRequirements || 'Stainless Steel'}
+Quantity: ${mission.quantity}
+Price: ₹${mission.estimatedValue.toLocaleString('en-IN')}
+Delivery: ${mission.deliveryDate || '15 Days'}
+
+Please reply CONFIRMED to proceed.`;
 
     mission.milestones = mission.milestones || [];
     mission.milestones.push({
       timestamp: nowStr,
       stage: 'Quotation_Sent',
-      text: `Owner approved quotation (Value: ₹${mission.estimatedValue.toLocaleString('en-IN')}). Official quote sent to ${mission.customerName} via WhatsApp.`,
+      text: `Owner approved quotation (Value: ₹${mission.estimatedValue.toLocaleString('en-IN')}). Quote sent to ${mission.contactChannel} over WhatsApp.`,
       actor: 'Business Owner'
     });
 
     await SalesMissionRepository.saveMission(mission);
 
-    // Dispatch quote via CommunicationService over WhatsApp
-    await CommunicationService.sendWhatsAppMessage(mission.whatsappJid || mission.contactChannel, quoteMsg, mission.id, 'Sales Agent');
+    // Dispatch quote via CommunicationService to Customer PHONE NUMBER (contactChannel)
+    await CommunicationService.send('whatsapp', mission.id, mission.contactChannel, quoteMsg, 'Sales Agent');
 
     return mission;
   }
 
   /**
-   * Cancels a Sales Mission.
+   * Rejects a Quotation draft.
    */
-  static async cancelMission(missionId: string): Promise<SalesMissionEntity> {
+  static async rejectQuotation(missionId: string): Promise<SalesMissionEntity> {
     const mission = await SalesMissionRepository.findById(missionId);
     if (!mission) throw new Error(`Sales Mission '${missionId}' not found.`);
 
@@ -300,11 +329,89 @@ export class SalesMissionService {
     mission.milestones.push({
       timestamp: nowStr,
       stage: 'Cancelled',
-      text: `🛑 Sales Mission '${mission.id}' CANCELLED by business owner.`,
-      actor: 'UI Action'
+      text: `🛑 Quotation draft rejected by business owner. Sales Mission cancelled.`,
+      actor: 'Business Owner'
     });
 
     await SalesMissionRepository.saveMission(mission);
     return mission;
+  }
+
+  /**
+   * Confirms a Customer Order, creates a SalesOrder in PostgreSQL, sends receipt to Customer Phone Number,
+   * and publishes the CustomerOrderCreated Business Event.
+   */
+  private static async confirmCustomerOrder(
+    activeMission: SalesMissionEntity,
+    customer: CustomerMasterItem,
+    messageText: string
+  ): Promise<{ handled: boolean; reply?: string }> {
+    const nowStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+    activeMission.currentStage = 'Order_Confirmed';
+    activeMission.status = 'Completed';
+
+    activeMission.milestones = activeMission.milestones || [];
+    activeMission.milestones.push({
+      timestamp: nowStr,
+      stage: 'Order_Confirmed',
+      text: `Customer ${customer.name} confirmed quotation ("${messageText}"). Customer Order created.`,
+      actor: 'Customer'
+    });
+
+    const orderNum = `SO-2026-${Math.floor(Math.random() * 9000 + 1000)}`;
+    const quantity = activeMission.quantity || 500;
+    const totalValue = activeMission.estimatedValue || (quantity * 210);
+
+    const salesOrder = await SalesOrderRepository.createOrder({
+      id: `so-${Date.now()}`,
+      orderNumber: orderNum,
+      missionId: activeMission.id,
+      customerName: customer.name,
+      productName: activeMission.productName,
+      quantity,
+      unitPrice: 210,
+      totalValue,
+      deliveryDate: activeMission.deliveryDate || '15 Days',
+      location: activeMission.location || 'Factory Delivery',
+      status: 'Confirmed'
+    });
+
+    await SalesMissionRepository.saveMission(activeMission);
+
+    // Send confirmation receipt over WhatsApp to Customer PHONE NUMBER
+    const receiptText = `✅ ORDER CONFIRMED!
+
+Thank you ${customer.name}. Your order ${orderNum} for ${quantity} units of ${activeMission.productName} (${activeMission.specialRequirements || 'Stainless Steel'}) has been logged in MissionOS ERP.
+
+Total Order Value: ₹${totalValue.toLocaleString('en-IN')}
+Expected Delivery: ${activeMission.deliveryDate || '15 Days'}
+
+Production scheduling will begin immediately.`;
+
+    await CommunicationService.send('whatsapp', activeMission.id, customer.contactChannel, receiptText, 'Sales Agent');
+
+    // CRITICAL REQUIREMENT: Publish CustomerOrderCreated Business Event
+    BusinessEventBus.publish({
+      id: `evt-co-${salesOrder.id}`,
+      type: 'CustomerOrderCreated',
+      timestamp: nowStr,
+      source: 'Sales Department',
+      summary: `Customer Order ${orderNum} confirmed for ${customer.name} (Value: ₹${totalValue.toLocaleString('en-IN')})`,
+      details: {
+        orderId: salesOrder.id,
+        orderNumber: salesOrder.orderNumber,
+        missionId: activeMission.id,
+        customerName: customer.name,
+        productName: activeMission.productName,
+        material: activeMission.specialRequirements || 'Stainless Steel',
+        quantity,
+        totalValue,
+        deliveryDate: salesOrder.deliveryDate,
+        location: salesOrder.location
+      },
+      deepLink: '/sales-agent'
+    });
+
+    return { handled: true, reply: receiptText };
   }
 }

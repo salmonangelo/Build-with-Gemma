@@ -10,6 +10,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     let mission;
     if (action === 'approve_quotation' || action === 'approve') {
       mission = await SalesMissionService.approveQuotationAndSend(resolvedParams.id);
+    } else if (action === 'reject') {
+      mission = await SalesMissionService.rejectQuotation(resolvedParams.id);
     } else if (action === 'cancel' || action === 'stop') {
       mission = await SalesMissionService.cancelMission(resolvedParams.id);
     } else {

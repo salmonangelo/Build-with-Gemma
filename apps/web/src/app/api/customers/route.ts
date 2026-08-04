@@ -26,7 +26,11 @@ export async function POST(req: Request) {
       whatsappJid || ''
     );
 
-    return NextResponse.json({ success: true, customer: created });
+    // CRITICAL REQUIREMENT: Automatically create Sales Mission and send initial intro WhatsApp message to Customer Phone Number
+    const { SalesMissionService } = await import('@/departments/sales/services/SalesMissionService');
+    const mission = await SalesMissionService.createMissionAndSendIntro(created);
+
+    return NextResponse.json({ success: true, customer: created, mission });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

@@ -22,7 +22,9 @@ import {
   MessageSquare,
   FileText,
   FileCheck2,
-  Users
+  Users,
+  XCircle,
+  Sparkles
 } from 'lucide-react';
 
 interface CustomerItem {
@@ -87,11 +89,11 @@ export default function SalesAgentPage() {
   const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
   const [messages, setMessages] = useState<ConversationMsg[]>([]);
 
-  // Form State
+  // Registration Form State
   const [newCustomerName, setNewCustomerName] = useState('');
   const [newCustomerPhone, setNewCustomerPhone] = useState('');
   const [newCustomerCompany, setNewCustomerCompany] = useState('');
-  const [newCustomerProduct, setNewCustomerProduct] = useState('CNC Mounting Bracket');
+  const [newCustomerProduct, setNewCustomerProduct] = useState('CNC Mounting Bracket (FG-CNC-BRACKET-01)');
   const [newCustomerJid, setNewCustomerJid] = useState('');
   const [savingCustomer, setSavingCustomer] = useState(false);
   const [editingJidId, setEditingJidId] = useState<number | null>(null);
@@ -99,12 +101,9 @@ export default function SalesAgentPage() {
 
   // Action Loading States
   const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
-  const [isTriggering, setIsTriggering] = useState(false);
-  const [missionStatusText, setMissionStatusText] = useState('🟢 System Ready for Customer Inquiries');
-
-  // Trigger form state
-  const [triggerQty, setTriggerQty] = useState(500);
+  const [missionStatusText, setMissionStatusText] = useState('🟢 System Ready for Customer Registration');
 
   // WhatsApp QR Modal State
   const [waConnected, setWaConnected] = useState(false);
@@ -112,7 +111,7 @@ export default function SalesAgentPage() {
   const [showQrModal, setShowQrModal] = useState(false);
   const [connecting, setConnecting] = useState(false);
 
-  // Poll WhatsApp Status
+  // Poll WhatsApp Connection Status
   const pollWhatsAppStatus = async () => {
     try {
       const res = await fetch('/api/whatsapp/status');
@@ -149,21 +148,20 @@ export default function SalesAgentPage() {
 
         if (current.status === 'Cancelled' || current.status === 'Completed') {
           setActiveMission(null);
-          setMissionStatusText('🟢 No Active Mission — Ready for Next Customer Inquiry');
+          setMissionStatusText('🟢 No Active Mission — Register a Customer to Start Sales Workflow');
           return;
         }
 
         setActiveMission(current);
 
-        // Update status text based on stage
         if (current.currentStage === 'Inquiry_Received' || current.currentStage === 'Gathering_Details') {
-          setMissionStatusText(`🟡 Gathering Order Details for ${current.customerName}`);
+          setMissionStatusText(`🟡 Automatic Workflow Active for ${current.customerName} — Gathering Details`);
         } else if (current.currentStage === 'Margin_Estimated') {
-          setMissionStatusText(`🟢 Margin Estimated (₹${current.estimatedMargin?.toLocaleString('en-IN')}) — Awaiting Owner Approval`);
+          setMissionStatusText(`🟢 Margin Estimated (₹${current.estimatedMargin?.toLocaleString('en-IN')}) — Owner Approval Required`);
         } else if (current.currentStage === 'Quotation_Approved' || current.currentStage === 'Quotation_Sent') {
-          setMissionStatusText(`🟢 Official Quotation Sent via WhatsApp — Awaiting Customer Acceptance`);
+          setMissionStatusText(`🟢 Official Quotation Sent via WhatsApp to ${current.contactChannel} — Awaiting Customer Acceptance`);
         } else if (current.currentStage === 'Order_Confirmed' || current.status === 'Completed') {
-          setMissionStatusText('✅ Sales Order Confirmed & Logged in MissionOS');
+          setMissionStatusText('✅ Customer Order Confirmed & CustomerOrderCreated Event Published');
         }
       }
     } catch (e) {
@@ -216,7 +214,7 @@ export default function SalesAgentPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Connect WhatsApp Button Click
+  // Connect WhatsApp
   const handleConnectWhatsApp = async () => {
     setConnecting(true);
     setShowQrModal(true);
@@ -229,7 +227,7 @@ export default function SalesAgentPage() {
     }
   };
 
-  // Save Customer
+  // Customer Registration Submission (AUTOMATIC WORKFLOW TRIGGER)
   const handleSaveCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCustomerName || !newCustomerPhone) return;
@@ -242,7 +240,7 @@ export default function SalesAgentPage() {
           name: newCustomerName,
           phone: newCustomerPhone,
           company: newCustomerCompany,
-          interestedProduct: newCustomerProduct,
+          interestedProduct: 'CNC Mounting Bracket (FG-CNC-BRACKET-01)',
           whatsappJid: newCustomerJid
         })
       });
@@ -252,7 +250,12 @@ export default function SalesAgentPage() {
         setNewCustomerPhone('');
         setNewCustomerCompany('');
         setNewCustomerJid('');
-        fetchCustomers();
+
+        setMissionStatusText(`🚀 Customer Registered! Sales Mission '${data.mission.id}' Auto-Started & Intro Sent to ${newCustomerPhone}`);
+
+        await fetchCustomers();
+        await fetchSalesMissions();
+        await fetchConversations();
       }
     } catch (e) {
       console.error('[Save customer error]:', e);
@@ -261,7 +264,7 @@ export default function SalesAgentPage() {
     }
   };
 
-  // Inline Update JID
+  // Inline Update WhatsApp JID
   const handleUpdateJid = async (id: number) => {
     try {
       const res = await fetch('/api/customers', {
@@ -292,42 +295,7 @@ export default function SalesAgentPage() {
     }
   };
 
-  // Trigger Inbound Customer Inquiry Simulation
-  const handleTriggerInquiry = async () => {
-    setIsTriggering(true);
-    try {
-      const targetCustomer = customers[0] || {
-        name: 'Apex Engineering (Ramesh)',
-        contactChannel: '+919880011223',
-        whatsappJid: '202516935528474'
-      };
-
-      const res = await fetch('/api/sales/missions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerName: targetCustomer.name,
-          contactChannel: targetCustomer.contactChannel,
-          whatsappJid: targetCustomer.whatsappJid,
-          productName: 'CNC Mounting Bracket',
-          quantity: triggerQty
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setMissionStatusText(`🟢 Margin Estimated (₹${data.mission.estimatedMargin?.toLocaleString('en-IN')}) — Awaiting Owner Approval`);
-        await fetchCustomers();
-        await fetchSalesMissions();
-        await fetchConversations();
-      }
-    } catch (e) {
-      console.error('[Trigger inquiry error]:', e);
-    } finally {
-      setIsTriggering(false);
-    }
-  };
-
-  // Approve Quotation Draft & Dispatch via WhatsApp
+  // Approve Quotation & Send via WhatsApp to Phone Number
   const handleApproveQuotation = async () => {
     if (!activeMission || isApproving) return;
     setIsApproving(true);
@@ -339,7 +307,7 @@ export default function SalesAgentPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setMissionStatusText(`🟢 Official Quotation Sent via WhatsApp to ${activeMission.customerName}`);
+        setMissionStatusText(`🟢 Official Quotation Sent via WhatsApp to ${activeMission.contactChannel}`);
         await fetchSalesMissions();
         await fetchConversations();
       }
@@ -347,6 +315,29 @@ export default function SalesAgentPage() {
       console.error('[Approve quotation error]:', e);
     } finally {
       setIsApproving(false);
+    }
+  };
+
+  // Reject Quotation
+  const handleRejectQuotation = async () => {
+    if (!activeMission || isRejecting) return;
+    setIsRejecting(true);
+    try {
+      const res = await fetch(`/api/sales/missions/${activeMission.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setActiveMission(null);
+        setMissionStatusText('🟢 Quotation Rejected — System Ready for Next Customer Registration');
+        await fetchSalesMissions();
+      }
+    } catch (e) {
+      console.error('[Reject quotation error]:', e);
+    } finally {
+      setIsRejecting(false);
     }
   };
 
@@ -363,7 +354,7 @@ export default function SalesAgentPage() {
       const data = await res.json();
       if (data.success) {
         setActiveMission(null);
-        setMissionStatusText('🟢 No Active Mission — Ready for Next Customer Inquiry');
+        setMissionStatusText('🟢 No Active Mission — Register a Customer to Start Sales Workflow');
         await fetchCustomers();
         await fetchSalesMissions();
       }
@@ -377,7 +368,7 @@ export default function SalesAgentPage() {
   // Reset Mission View
   const handleResetMission = () => {
     setActiveMission(null);
-    setMissionStatusText('🟢 No Active Mission — Ready for Next Customer Inquiry');
+    setMissionStatusText('🟢 No Active Mission — Register a Customer to Start Sales Workflow');
   };
 
   return (
@@ -385,22 +376,22 @@ export default function SalesAgentPage() {
       <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-6 text-[var(--text-primary)]">
         
         {/* =================================================================== */}
-        {/* 1. TOP HEADER & WHATSAPP CONNECTION BAR                            */}
+        {/* 1. WHATSAPP STATUS HEADER                                          */}
         {/* =================================================================== */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-3xl p-6 shadow-sm">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-full text-xs font-bold font-mono uppercase tracking-wider">
-                  Department: Sales & Customer Acquisition
+                  Department: AI Sales Executive
                 </span>
                 {waConnected ? (
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-1">
-                    <CheckCircle2 size={12} /> WhatsApp Online
+                    <CheckCircle2 size={12} /> WhatsApp Gateway Connected
                   </span>
                 ) : (
                   <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold flex items-center gap-1">
-                    <Clock size={12} /> WhatsApp Connecting...
+                    <Clock size={12} /> WhatsApp Gateway Connecting...
                   </span>
                 )}
               </div>
@@ -408,7 +399,7 @@ export default function SalesAgentPage() {
                 AI Sales Executive (Customer Acquisition & Order Capture)
               </h1>
               <p className="text-sm text-[var(--text-muted)] mt-1">
-                Autonomous WhatsApp Inquiry Response ➔ Customer JID Matching ➔ Margin Estimation ➔ Quotation Approval ➔ Order Capture
+                Automatic Customer Registration Onboarding ➔ Outgoing to Phone Number ➔ Incoming via WhatsApp JID ➔ Margin Estimation ➔ Order Creation
               </p>
             </div>
 
@@ -418,70 +409,104 @@ export default function SalesAgentPage() {
               className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer"
             >
               <QrCode size={16} />
-              <span>{waConnected ? 'View WhatsApp Connection' : 'Scan WhatsApp QR'}</span>
+              <span>{waConnected ? 'WhatsApp Active' : 'Scan WhatsApp QR'}</span>
             </button>
           </div>
         </div>
 
         {/* =================================================================== */}
-        {/* 2. CUSTOMER MASTER TABLE & REGISTRATION FORM                        */}
+        {/* 2. CUSTOMER REGISTRATION FORM (AUTOMATIC WORKFLOW TRIGGER)          */}
         {/* =================================================================== */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-3xl p-6 shadow-sm">
+        <div className="bg-[var(--bg-card)] border border-purple-500/30 rounded-3xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-bold font-display flex items-center gap-2">
                 <Users size={20} className="text-purple-500" />
-                Customer Master Database
+                Customer Registration Form
               </h2>
               <p className="text-xs text-[var(--text-muted)]">
-                Registered customers matched by WhatsApp JID / Phone for sales inquiries
+                Saving customer automatically creates a Sales Mission & dispatches the initial WhatsApp introduction message to their Phone Number
               </p>
             </div>
+            <span className="px-2.5 py-1 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-full text-[10px] font-bold font-mono">
+              Product: FG-CNC-BRACKET-01
+            </span>
           </div>
 
-          {/* Add Customer Form */}
-          <form onSubmit={handleSaveCustomer} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mb-6 p-4 bg-[var(--bg-subtle)] rounded-2xl border border-[var(--border-subtle)]">
-            <input
-              type="text"
-              placeholder="Customer Name (e.g. Ramesh)"
-              value={newCustomerName}
-              onChange={e => setNewCustomerName(e.target.value)}
-              className="px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl text-xs focus:outline-hidden focus:border-purple-500"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Phone (e.g. +919880011223)"
-              value={newCustomerPhone}
-              onChange={e => setNewCustomerPhone(e.target.value)}
-              className="px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl text-xs focus:outline-hidden focus:border-purple-500"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Company (e.g. Apex Engg)"
-              value={newCustomerCompany}
-              onChange={e => setNewCustomerCompany(e.target.value)}
-              className="px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl text-xs focus:outline-hidden focus:border-purple-500"
-            />
-            <input
-              type="text"
-              placeholder="WhatsApp JID (e.g. 202516935528474)"
-              value={newCustomerJid}
-              onChange={e => setNewCustomerJid(e.target.value)}
-              className="px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl text-xs focus:outline-hidden focus:border-purple-500"
-            />
-            <button
-              type="submit"
-              disabled={savingCustomer}
-              className="py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-            >
-              {savingCustomer ? <RefreshCw size={14} className="animate-spin" /> : <Plus size={14} />}
-              <span>Add Customer</span>
-            </button>
-          </form>
+          <form onSubmit={handleSaveCustomer} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 p-4 bg-[var(--bg-subtle)] rounded-2xl border border-[var(--border-subtle)]">
+            <div>
+              <label className="text-[10px] font-mono text-[var(--text-muted)] uppercase block mb-1">Customer Name *</label>
+              <input
+                type="text"
+                placeholder="e.g. Apex Engg (Ramesh)"
+                value={newCustomerName}
+                onChange={e => setNewCustomerName(e.target.value)}
+                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl text-xs focus:outline-hidden focus:border-purple-500 font-medium"
+                required
+              />
+            </div>
 
-          {/* Customers Table */}
+            <div>
+              <label className="text-[10px] font-mono text-[var(--text-muted)] uppercase block mb-1">Company Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Apex Engg Pvt Ltd"
+                value={newCustomerCompany}
+                onChange={e => setNewCustomerCompany(e.target.value)}
+                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl text-xs focus:outline-hidden focus:border-purple-500 font-medium"
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-mono text-[var(--text-muted)] uppercase block mb-1">Phone Number (Sending Target) *</label>
+              <input
+                type="text"
+                placeholder="e.g. +919876543210"
+                value={newCustomerPhone}
+                onChange={e => setNewCustomerPhone(e.target.value)}
+                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl text-xs focus:outline-hidden focus:border-purple-500 font-mono"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-mono text-[var(--text-muted)] uppercase block mb-1">WhatsApp JID (Incoming Target)</label>
+              <input
+                type="text"
+                placeholder="e.g. 203518742945731"
+                value={newCustomerJid}
+                onChange={e => setNewCustomerJid(e.target.value)}
+                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl text-xs focus:outline-hidden focus:border-purple-500 font-mono"
+              />
+            </div>
+
+            <div className="flex items-end">
+              <button
+                type="submit"
+                disabled={savingCustomer}
+                className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {savingCustomer ? <RefreshCw size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                <span>Save Customer & Start Workflow</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* =================================================================== */}
+        {/* 3. CUSTOMER MASTER TABLE                                            */}
+        {/* =================================================================== */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-3xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-bold font-display flex items-center gap-2">
+              <Building2 size={18} className="text-purple-500" />
+              Customer Master Registry
+            </h2>
+            <span className="text-xs text-[var(--text-muted)] font-mono font-bold">
+              {customers.length} Registered Customers
+            </span>
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
@@ -489,8 +514,8 @@ export default function SalesAgentPage() {
                   <th className="py-2.5 px-3">ID</th>
                   <th className="py-2.5 px-3">Customer Name</th>
                   <th className="py-2.5 px-3">Company</th>
-                  <th className="py-2.5 px-3">Phone</th>
-                  <th className="py-2.5 px-3">WhatsApp JID (Editable)</th>
+                  <th className="py-2.5 px-3">Phone (Sending Target)</th>
+                  <th className="py-2.5 px-3">WhatsApp JID (Incoming Resolver)</th>
                   <th className="py-2.5 px-3">Interested Product</th>
                   <th className="py-2.5 px-3 text-right">Actions</th>
                 </tr>
@@ -501,7 +526,7 @@ export default function SalesAgentPage() {
                     <td className="py-3 px-3 font-mono font-bold text-[var(--text-muted)]">#{c.id}</td>
                     <td className="py-3 px-3 font-bold text-[var(--text-primary)]">{c.name}</td>
                     <td className="py-3 px-3 text-[var(--text-muted)]">{c.company || '—'}</td>
-                    <td className="py-3 px-3 font-mono text-[var(--primary)]">{c.contactChannel}</td>
+                    <td className="py-3 px-3 font-mono text-[var(--primary)] font-bold">{c.contactChannel}</td>
                     <td className="py-3 px-3 font-mono">
                       {editingJidId === c.id ? (
                         <div className="flex items-center gap-1.5">
@@ -517,12 +542,12 @@ export default function SalesAgentPage() {
                         </div>
                       ) : (
                         <div className="flex items-center gap-1.5 group cursor-pointer" onClick={() => { setEditingJidId(c.id); setEditingJidValue(c.whatsappJid); }}>
-                          <span className="text-emerald-400 font-bold">{c.whatsappJid || 'Click to add JID'}</span>
+                          <span className="text-emerald-400 font-bold">{c.whatsappJid || 'Click to set JID'}</span>
                           <Edit2 size={12} className="text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                       )}
                     </td>
-                    <td className="py-3 px-3 text-[var(--text-primary)] font-medium">{c.interestedProduct}</td>
+                    <td className="py-3 px-3 text-[var(--text-primary)] font-medium">CNC Mounting Bracket (FG-CNC-BRACKET-01)</td>
                     <td className="py-3 px-3 text-right">
                       <button onClick={() => handleDeleteCustomer(c.id)} className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete Customer">
                         <Trash2 size={14} />
@@ -536,54 +561,16 @@ export default function SalesAgentPage() {
         </div>
 
         {/* =================================================================== */}
-        {/* 3. INBOUND INQUIRY SIMULATOR                                        */}
-        {/* =================================================================== */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-3xl p-6 shadow-sm">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h3 className="text-base font-bold font-display flex items-center gap-2">
-                <Send size={18} className="text-purple-500" />
-                Simulate Customer WhatsApp Sales Inquiry
-              </h3>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                Simulates inbound message: "Need {triggerQty} CNC Mounting Brackets" from registered customer
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <label className="text-xs text-[var(--text-muted)] font-bold">Qty:</label>
-                <input
-                  type="number"
-                  min="50"
-                  step="50"
-                  value={triggerQty}
-                  onChange={e => setTriggerQty(parseInt(e.target.value, 10) || 500)}
-                  className="w-24 px-3 py-1.5 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-xl text-xs font-bold text-[var(--primary)] font-mono"
-                />
-              </div>
-              <button
-                onClick={handleTriggerInquiry}
-                disabled={isTriggering}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                {isTriggering ? <RefreshCw size={14} className="animate-spin" /> : <Send size={14} />}
-                <span>Simulate Sales Inquiry ({triggerQty} pcs)</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* =================================================================== */}
-        {/* 4. CURRENT SALES MISSION STATUS BANNER                              */}
+        {/* 4. ACTIVE SALES MISSION BANNER                                      */}
         {/* =================================================================== */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-3xl p-6 shadow-sm">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-400 text-[10px] font-bold font-mono">
-                  {activeMission?.id || 'No Mission Active'}
+                  {activeMission?.id || 'No Active Mission'}
                 </span>
-                <span className="text-xs font-bold text-[var(--text-muted)]">Current Sales Mission Status:</span>
+                <span className="text-xs font-bold text-[var(--text-muted)]">Sales Mission Workflow Status:</span>
               </div>
               <h3 className="text-base font-black font-display text-[var(--text-primary)] mt-1">
                 {missionStatusText}
@@ -592,15 +579,14 @@ export default function SalesAgentPage() {
             {activeMission && (
               <div className="flex items-center gap-4">
                 <div className="text-right hidden sm:block">
-                  <span className="text-xs text-[var(--text-muted)]">Target Customer: </span>
-                  <strong className="text-xs text-[var(--primary)] font-bold">{activeMission.customerName} ({activeMission.quantity} pcs)</strong>
+                  <span className="text-xs text-[var(--text-muted)]">Customer Phone Target: </span>
+                  <strong className="text-xs text-[var(--primary)] font-mono font-bold">{activeMission.contactChannel}</strong>
                 </div>
                 {activeMission.status !== 'Completed' && activeMission.status !== 'Cancelled' ? (
                   <button
                     onClick={handleCancelMission}
                     disabled={isCancelling}
                     className="px-3 py-1.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
-                    title="Stop / Cancel Ongoing Sales Mission"
                   >
                     {isCancelling ? <RefreshCw size={14} className="animate-spin text-red-400" /> : <OctagonX size={14} />}
                     <span>{isCancelling ? 'Stopping...' : 'Stop Mission'}</span>
@@ -609,10 +595,9 @@ export default function SalesAgentPage() {
                   <button
                     onClick={handleResetMission}
                     className="px-3 py-1.5 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] hover:bg-[var(--bg-card-hover)] text-[var(--text-muted)] rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
-                    title="Mission completed or cancelled. Click to reset."
                   >
                     <RotateCcw size={14} />
-                    <span>Reset Mission</span>
+                    <span>Reset Mission View</span>
                   </button>
                 )}
               </div>
@@ -621,163 +606,145 @@ export default function SalesAgentPage() {
         </div>
 
         {/* =================================================================== */}
-        {/* 5. MARGIN ESTIMATION & QUOTATION APPROVAL CARD                      */}
+        {/* 5. LIVE WHATSAPP CONVERSATION STREAM                                */}
         {/* =================================================================== */}
-        {activeMission && activeMission.estimatedValue > 0 && (
-          <div className="bg-[var(--bg-card)] border border-purple-500/30 rounded-3xl p-6 shadow-md relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl pointer-events-none" />
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-              <div className="space-y-2">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-3xl p-6 shadow-sm flex flex-col h-[400px]">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--border-subtle)]">
+            <h3 className="text-base font-bold font-display flex items-center gap-2">
+              <MessageSquare size={18} className="text-emerald-500" />
+              Live WhatsApp Conversation Stream
+            </h3>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono text-[var(--text-muted)]">Outgoing: Phone Number | Incoming: WhatsApp JID</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+            {messages.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center p-6 text-[var(--text-muted)]">
+                <MessageSquare size={32} className="opacity-30 mb-2" />
+                <p className="text-xs">No active WhatsApp messages in stream.</p>
+                <p className="text-[10px] mt-1">Register a customer to auto-send the initial introduction message.</p>
+              </div>
+            ) : (
+              messages.map(m => (
+                <div key={m.id} className={`flex flex-col ${m.direction === 'OUTGOING' ? 'items-end' : 'items-start'}`}>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-[10px] font-bold text-[var(--text-muted)]">{m.sender}</span>
+                    <span className="text-[9px] font-mono text-[var(--text-muted)]">{m.timestamp}</span>
+                  </div>
+                  <div className={`p-3 rounded-2xl max-w-[85%] text-xs leading-relaxed whitespace-pre-wrap ${
+                    m.direction === 'OUTGOING' 
+                      ? 'bg-purple-600 text-white rounded-tr-none' 
+                      : 'bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--text-primary)] rounded-tl-none'
+                  }`}>
+                    {m.content}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* =================================================================== */}
+        {/* 6. MARGIN ESTIMATION & OWNER APPROVAL CARD                          */}
+        {/* =================================================================== */}
+        {activeMission && (activeMission.estimatedValue > 0 || activeMission.quantity > 0) && (
+          <div className="bg-[var(--bg-card)] border border-purple-500/40 rounded-3xl p-6 shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+              <div className="space-y-3 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold font-mono">
+                  <span className="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs font-bold font-mono">
                     Margin Confidence: {activeMission.marginConfidence || 'High (96%)'}
                   </span>
-                  <span className="text-xs text-[var(--text-muted)]">Stage: <strong className="text-[var(--text-primary)]">{activeMission.currentStage}</strong></span>
+                  <span className="text-xs font-bold text-[var(--text-muted)]">
+                    Current Stage: <strong className="text-[var(--text-primary)]">{activeMission.currentStage}</strong>
+                  </span>
                 </div>
+
                 <h3 className="text-xl font-black font-display text-[var(--text-primary)]">
-                  Quotation Draft & Margin Analysis: {activeMission.productName}
+                  Quotation Draft & Owner Approval Card: {activeMission.productName}
                 </h3>
-                <p className="text-xs text-[var(--text-muted)] max-w-2xl">
+
+                <p className="text-xs text-[var(--text-muted)]">
                   {activeMission.businessReason || 'Calculated based on standard MSME precision CNC machining margin benchmark.'}
                 </p>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-3">
+                {/* Estimation Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
                   <div className="p-3 bg-[var(--bg-subtle)] rounded-2xl border border-[var(--border-subtle)]">
-                    <span className="text-[10px] text-[var(--text-muted)] font-mono uppercase">Order Quantity</span>
-                    <p className="text-base font-bold font-mono text-[var(--text-primary)] mt-0.5">{activeMission.quantity} pcs</p>
+                    <span className="text-[10px] text-[var(--text-muted)] font-mono uppercase block">Customer</span>
+                    <p className="text-xs font-bold text-[var(--text-primary)] truncate mt-0.5">{activeMission.customerName}</p>
                   </div>
+
                   <div className="p-3 bg-[var(--bg-subtle)] rounded-2xl border border-[var(--border-subtle)]">
-                    <span className="text-[10px] text-[var(--text-muted)] font-mono uppercase">Unit Price / Value</span>
-                    <p className="text-base font-bold font-mono text-purple-400 mt-0.5">₹450 / ₹{activeMission.estimatedValue?.toLocaleString('en-IN')}</p>
+                    <span className="text-[10px] text-[var(--text-muted)] font-mono uppercase block">Material / Qty</span>
+                    <p className="text-xs font-bold text-[var(--primary)] font-mono mt-0.5">
+                      {activeMission.specialRequirements || 'Stainless Steel'} ({activeMission.quantity} pcs)
+                    </p>
                   </div>
+
                   <div className="p-3 bg-[var(--bg-subtle)] rounded-2xl border border-[var(--border-subtle)]">
-                    <span className="text-[10px] text-[var(--text-muted)] font-mono uppercase">Est. Mfg Cost</span>
-                    <p className="text-base font-bold font-mono text-[var(--text-muted)] mt-0.5">₹{activeMission.estimatedCost?.toLocaleString('en-IN')}</p>
+                    <span className="text-[10px] text-[var(--text-muted)] font-mono uppercase block">Est. Mfg Cost</span>
+                    <p className="text-xs font-bold font-mono text-[var(--text-muted)] mt-0.5">
+                      ₹{activeMission.estimatedCost?.toLocaleString('en-IN')}
+                    </p>
                   </div>
+
+                  <div className="p-3 bg-[var(--bg-subtle)] rounded-2xl border border-[var(--border-subtle)]">
+                    <span className="text-[10px] text-[var(--text-muted)] font-mono uppercase block">Selling Price</span>
+                    <p className="text-xs font-bold font-mono text-purple-400 mt-0.5">
+                      ₹{activeMission.estimatedValue?.toLocaleString('en-IN')}
+                    </p>
+                  </div>
+
                   <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/30">
-                    <span className="text-[10px] text-emerald-400 font-mono uppercase font-bold">Est. Gross Margin</span>
-                    <p className="text-base font-black font-mono text-emerald-400 mt-0.5">₹{activeMission.estimatedMargin?.toLocaleString('en-IN')} (37.8%)</p>
+                    <span className="text-[10px] text-emerald-400 font-mono uppercase font-bold block">Expected Profit / Margin</span>
+                    <p className="text-xs font-black font-mono text-emerald-400 mt-0.5">
+                      ₹{activeMission.estimatedMargin?.toLocaleString('en-IN')} (33.3%)
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {activeMission.currentStage !== 'Quotation_Sent' && activeMission.currentStage !== 'Order_Confirmed' ? (
-                <button
-                  onClick={handleApproveQuotation}
-                  disabled={isApproving}
-                  className="px-6 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-bold text-sm transition-all shadow-lg hover:shadow-purple-500/25 flex items-center gap-2.5 cursor-pointer disabled:opacity-50 whitespace-nowrap"
-                >
-                  {isApproving ? <RefreshCw size={18} className="animate-spin" /> : <FileCheck2 size={18} />}
-                  <span>Approve & Send Quotation via WhatsApp</span>
-                </button>
-              ) : (
-                <div className="px-5 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-400 text-xs font-bold flex items-center gap-2">
-                  <CheckCircle2 size={16} />
-                  <span>Quotation Dispatched over WhatsApp</span>
-                </div>
-              )}
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row lg:flex-col gap-3 min-w-[220px]">
+                {activeMission.currentStage !== 'Quotation_Sent' && activeMission.currentStage !== 'Order_Confirmed' ? (
+                  <>
+                    <button
+                      onClick={handleApproveQuotation}
+                      disabled={isApproving}
+                      className="w-full px-5 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    >
+                      {isApproving ? <RefreshCw size={16} className="animate-spin" /> : <FileCheck2 size={16} />}
+                      <span>Approve & Send Quotation</span>
+                    </button>
+
+                    <button
+                      onClick={handleRejectQuotation}
+                      disabled={isRejecting}
+                      className="w-full px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 rounded-2xl font-bold text-xs transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    >
+                      {isRejecting ? <RefreshCw size={14} className="animate-spin" /> : <XCircle size={14} />}
+                      <span>Reject Quotation</span>
+                    </button>
+                  </>
+                ) : (
+                  <div className="px-4 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-400 text-xs font-bold flex items-center gap-2">
+                    <CheckCircle2 size={16} />
+                    <span>Quotation Sent to {activeMission.contactChannel}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
 
         {/* =================================================================== */}
-        {/* 6. CONVERSATION STREAM & CONFIRMED SALES ORDERS                      */}
-        {/* =================================================================== */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
-          {/* Sales WhatsApp Conversation Stream */}
-          <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-3xl p-6 shadow-sm flex flex-col h-[480px]">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--border-subtle)]">
-              <h3 className="text-base font-bold font-display flex items-center gap-2">
-                <MessageSquare size={18} className="text-emerald-500" />
-                Sales WhatsApp Conversation Stream
-              </h3>
-              <span className="text-[10px] font-mono text-[var(--text-muted)] bg-[var(--bg-subtle)] px-2 py-1 rounded-md">Live Sync</span>
-            </div>
-
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-              {messages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-6 text-[var(--text-muted)]">
-                  <MessageSquare size={32} className="opacity-30 mb-2" />
-                  <p className="text-xs">No active WhatsApp messages in stream.</p>
-                  <p className="text-[10px] mt-1">Simulate an inquiry or reply on WhatsApp to see messages live.</p>
-                </div>
-              ) : (
-                messages.map(m => (
-                  <div key={m.id} className={`flex flex-col ${m.direction === 'OUTGOING' ? 'items-end' : 'items-start'}`}>
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <span className="text-[10px] font-bold text-[var(--text-muted)]">{m.sender}</span>
-                      <span className="text-[9px] font-mono text-[var(--text-muted)]">{m.timestamp}</span>
-                    </div>
-                    <div className={`p-3 rounded-2xl max-w-[85%] text-xs leading-relaxed whitespace-pre-wrap ${
-                      m.direction === 'OUTGOING' 
-                        ? 'bg-purple-600 text-white rounded-tr-none' 
-                        : 'bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--text-primary)] rounded-tl-none'
-                    }`}>
-                      {m.content}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Confirmed Sales Orders Table */}
-          <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-3xl p-6 shadow-sm flex flex-col h-[480px]">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--border-subtle)]">
-              <h3 className="text-base font-bold font-display flex items-center gap-2">
-                <PackageCheck size={18} className="text-emerald-500" />
-                Confirmed Sales Orders
-              </h3>
-              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full font-bold">
-                {salesOrders.length} Orders Logged
-              </span>
-            </div>
-
-            <div className="flex-1 overflow-y-auto">
-              {salesOrders.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-6 text-[var(--text-muted)]">
-                  <FileText size={32} className="opacity-30 mb-2" />
-                  <p className="text-xs">No confirmed sales orders logged yet.</p>
-                  <p className="text-[10px] mt-1">When customers accept quotations, orders will be persisted here.</p>
-                </div>
-              ) : (
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-[var(--border-subtle)] text-[var(--text-muted)] font-mono uppercase text-[10px]">
-                      <th className="py-2 px-2">Order #</th>
-                      <th className="py-2 px-2">Customer</th>
-                      <th className="py-2 px-2">Product</th>
-                      <th className="py-2 px-2">Qty</th>
-                      <th className="py-2 px-2">Total Value</th>
-                      <th className="py-2 px-2">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--border-subtle)]">
-                    {salesOrders.map(o => (
-                      <tr key={o.id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
-                        <td className="py-3 px-2 font-mono font-bold text-purple-400">{o.orderNumber}</td>
-                        <td className="py-3 px-2 font-bold text-[var(--text-primary)]">{o.customerName}</td>
-                        <td className="py-3 px-2 text-[var(--text-muted)]">{o.productName}</td>
-                        <td className="py-3 px-2 font-mono">{o.quantity} pcs</td>
-                        <td className="py-3 px-2 font-mono font-bold text-emerald-400">₹{o.totalValue.toLocaleString('en-IN')}</td>
-                        <td className="py-3 px-2">
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">
-                            {o.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-
-        </div>
-
-        {/* =================================================================== */}
-        {/* 7. SALES MISSION TIMELINE FEED                                     */}
+        {/* 7. SALES MISSION TIMELINE AUDIT STREAM                              */}
         {/* =================================================================== */}
         {activeMission && activeMission.milestones && activeMission.milestones.length > 0 && (
           <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-3xl p-6 shadow-sm">
@@ -805,6 +772,64 @@ export default function SalesAgentPage() {
             </div>
           </div>
         )}
+
+        {/* =================================================================== */}
+        {/* 8. CONFIRMED CUSTOMER ORDERS TABLE                                  */}
+        {/* =================================================================== */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-3xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--border-subtle)]">
+            <h3 className="text-base font-bold font-display flex items-center gap-2">
+              <PackageCheck size={18} className="text-emerald-500" />
+              Confirmed Customer Orders
+            </h3>
+            <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full font-bold">
+              {salesOrders.length} Confirmed Orders
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            {salesOrders.length === 0 ? (
+              <div className="py-8 text-center text-[var(--text-muted)]">
+                <FileText size={32} className="opacity-30 mx-auto mb-2" />
+                <p className="text-xs">No confirmed customer orders logged yet.</p>
+                <p className="text-[10px] mt-1">When customers reply CONFIRMED over WhatsApp, orders will be persisted here.</p>
+              </div>
+            ) : (
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-[var(--border-subtle)] text-[var(--text-muted)] font-mono uppercase text-[10px]">
+                    <th className="py-2.5 px-3">Order Number</th>
+                    <th className="py-2.5 px-3">Customer Name</th>
+                    <th className="py-2.5 px-3">Product Name</th>
+                    <th className="py-2.5 px-3">Quantity</th>
+                    <th className="py-2.5 px-3">Unit Price</th>
+                    <th className="py-2.5 px-3">Total Value</th>
+                    <th className="py-2.5 px-3">Delivery Timeframe</th>
+                    <th className="py-2.5 px-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border-subtle)]">
+                  {salesOrders.map(o => (
+                    <tr key={o.id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
+                      <td className="py-3 px-3 font-mono font-bold text-purple-400">{o.orderNumber}</td>
+                      <td className="py-3 px-3 font-bold text-[var(--text-primary)]">{o.customerName}</td>
+                      <td className="py-3 px-3 text-[var(--text-muted)]">{o.productName}</td>
+                      <td className="py-3 px-3 font-mono">{o.quantity} pcs</td>
+                      <td className="py-3 px-3 font-mono">₹{o.unitPrice}</td>
+                      <td className="py-3 px-3 font-mono font-bold text-emerald-400">₹{o.totalValue.toLocaleString('en-IN')}</td>
+                      <td className="py-3 px-3 text-[var(--text-muted)]">{o.deliveryDate}</td>
+                      <td className="py-3 px-3">
+                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">
+                          {o.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
 
       </div>
     </DashboardLayout>

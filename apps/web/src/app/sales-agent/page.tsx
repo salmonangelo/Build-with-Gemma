@@ -433,7 +433,7 @@ export default function SalesAgentPage() {
             </span>
           </div>
 
-          <form onSubmit={handleSaveCustomer} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 p-4 bg-[var(--bg-subtle)] rounded-2xl border border-[var(--border-subtle)]">
+          <form onSubmit={handleSaveCustomer} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 p-4 bg-[var(--bg-subtle)] rounded-2xl border border-[var(--border-subtle)]">
             <div>
               <label className="text-[10px] font-mono text-[var(--text-muted)] uppercase block mb-1">Customer Name *</label>
               <input
@@ -477,6 +477,17 @@ export default function SalesAgentPage() {
                 value={newCustomerJid}
                 onChange={e => setNewCustomerJid(e.target.value)}
                 className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl text-xs focus:outline-hidden focus:border-purple-500 font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-mono text-[var(--text-muted)] uppercase block mb-1">Interested Product / SKU</label>
+              <input
+                type="text"
+                value={newCustomerProduct}
+                onChange={e => setNewCustomerProduct(e.target.value)}
+                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl text-xs focus:outline-hidden focus:border-purple-500 font-medium"
+                placeholder="CNC Mounting Bracket (FG-CNC-BRACKET-01)"
               />
             </div>
 

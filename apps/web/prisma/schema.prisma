@@ -299,3 +299,57 @@ model BusinessEvent {
   payload   Json
   createdAt DateTime @default(now())
 }
+
+model Customer {
+  id                Int      @id @default(autoincrement())
+  name              String
+  company           String   @default("")
+  contactChannel    String   @unique
+  whatsappJid       String?  @default("")
+  interestedProduct String   @default("CNC Mounting Bracket")
+  status            String   @default("Active")
+  lastConversation  String?  @default("")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model SalesMission {
+  id                  String       @id
+  customerId          Int?
+  customerName        String
+  contactChannel      String
+  whatsappJid         String
+  productName         String       @default("CNC Mounting Bracket")
+  quantity            Int          @default(0)
+  deliveryDate        String?      @default("")
+  location            String?      @default("")
+  specialRequirements String?      @default("")
+  estimatedValue      Float        @default(0)
+  estimatedCost       Float        @default(0)
+  estimatedMargin     Float        @default(0)
+  marginConfidence    String?      @default("High")
+  businessReason      String?      @default("Standard margin benchmark for CNC machining")
+  currentStage        String       @default("Inquiry_Received")
+  status              String       @default("Active")
+  context             Json?
+  milestones          Json?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  salesOrders         SalesOrder[]
+}
+
+model SalesOrder {
+  id           String       @id
+  orderNumber  String       @unique
+  missionId    String
+  mission      SalesMission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  customerName String
+  productName  String
+  quantity     Int
+  unitPrice    Float
+  totalValue   Float
+  deliveryDate String
+  location     String
+  status       String       @default("Confirmed")
+  createdAt    DateTime     @default(now())
+}

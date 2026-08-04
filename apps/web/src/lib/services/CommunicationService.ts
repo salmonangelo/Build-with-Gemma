@@ -132,7 +132,8 @@ export class CommunicationService {
     channel: 'whatsapp',
     workflowId: string,
     recipient: string,
-    message: string
+    message: string,
+    senderName: string = 'Procurement AI'
   ): Promise<{ success: boolean; messageId?: string }> {
     const timeStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
 
@@ -140,7 +141,7 @@ export class CommunicationService {
     const msgObj: ConversationMessage = {
       id: `msg-${Date.now().toString().slice(-6)}`,
       workflowId,
-      sender: 'Procurement AI',
+      sender: senderName,
       senderPhone: recipient,
       direction: 'OUTGOING',
       content: message,
@@ -164,6 +165,18 @@ export class CommunicationService {
     }
 
     return { success: true, messageId: msgObj.id };
+  }
+
+  /**
+   * Helper alias for sending WhatsApp messages directly.
+   */
+  static async sendWhatsAppMessage(
+    recipient: string,
+    message: string,
+    workflowId: string = 'ALL',
+    senderName: string = 'Sales Agent'
+  ): Promise<{ success: boolean; messageId?: string }> {
+    return this.send('whatsapp', workflowId, recipient, message, senderName);
   }
 
   /**
@@ -216,7 +229,6 @@ export class CommunicationService {
       return cleanFrom === cleanJid || cleanFrom.includes(cleanJid) || cleanJid.includes(cleanFrom) || (cleanJid.length >= 10 && cleanFrom.endsWith(cleanJid.slice(-10)));
     });
 
-    // Fallback to phone number contactChannel if whatsappJid is empty
     if (!matchedSupplier) {
       matchedSupplier = allSuppliers.find(s => {
         const cleanPhone = s.contactChannel.replace(/\D/g, '');
@@ -225,41 +237,60 @@ export class CommunicationService {
       });
     }
 
-    // RULE 1: Unknown JID Check — If incoming JID is not present in Supplier Master, IGNORE completely!
-    if (!matchedSupplier) {
-      console.log(`ℹ️ [CommunicationService] Ignored unknown WhatsApp message ['${messageText}'] from ${fromPhone}: JID not found in Supplier Master.`);
-      return { handled: false, reply: 'Ignored (Unknown JID / Not in Supplier Master)' };
+    // If matching Supplier is found for Procurement Mission
+    if (matchedSupplier && activeMission) {
+      const participants = (activeMission.context as any)?.missionParticipants || [];
+      const matchedParticipant = participants.find((p: any) => p.supplierId === matchedSupplier!.id || p.supplierName.toLowerCase() === matchedSupplier!.name.toLowerCase());
+
+      if (matchedParticipant) {
+        if (!matchedParticipant.whatsappJid) {
+          matchedParticipant.whatsappJid = matchedSupplier.whatsappJid || fromPhone;
+        }
+
+        const msgObj: ConversationMessage = {
+          id: `msg-in-${Date.now().toString().slice(-6)}`,
+          workflowId: activeMission.id,
+          sender: matchedSupplier.name,
+          senderPhone: matchedSupplier.contactChannel,
+          direction: 'INCOMING',
+          content: messageText,
+          timestamp: timeStr
+        };
+        this.messageStream.push(msgObj);
+
+        return ProcurementMissionService.processIncomingWhatsAppEvent(fromPhone, messageText, matchedSupplier, matchedParticipant);
+      }
     }
 
-    // 3. STEP C: Verify Participant Membership
-    const participants = (activeMission.context as any)?.missionParticipants || [];
-    const matchedParticipant = participants.find((p: any) => p.supplierId === matchedSupplier!.id || p.supplierName.toLowerCase() === matchedSupplier!.name.toLowerCase());
+    // 3. STEP C: Check Customer Master for Sales Mission Routing
+    const { CustomerRepository } = await import('../../departments/sales/repositories/CustomerRepository');
+    const { SalesMissionService } = await import('../../departments/sales/services/SalesMissionService');
+    const matchedCustomer = await CustomerRepository.findByJidOrPhone(fromPhone);
 
-    // RULE 2: Participant Membership Check — If resolved supplier is NOT part of the active mission, IGNORE completely!
-    if (!matchedParticipant) {
-      console.log(`ℹ️ [CommunicationService] Ignored message ['${messageText}'] from ${matchedSupplier.name} (${fromPhone}): Supplier is not a participant of active procurement mission ${activeMission.id}.`);
-      return { handled: false, reply: 'Ignored (Supplier not a participant of active procurement mission)' };
+    if (matchedCustomer) {
+      const result = await SalesMissionService.processIncomingCustomerWhatsAppEvent(fromPhone, messageText, matchedCustomer);
+
+      const { SalesMissionRepository } = await import('../../departments/sales/repositories/SalesMissionRepository');
+      const salesMissions = await SalesMissionRepository.getAllMissions();
+      const activeSalesMission = salesMissions.find(m => m.customerName.toLowerCase() === matchedCustomer.name.toLowerCase());
+
+      const msgObj: ConversationMessage = {
+        id: `msg-in-sales-${Date.now().toString().slice(-6)}`,
+        workflowId: activeSalesMission?.id || 'SALES-0001',
+        sender: matchedCustomer.name,
+        senderPhone: matchedCustomer.contactChannel,
+        direction: 'INCOMING',
+        content: messageText,
+        timestamp: timeStr
+      };
+      this.messageStream.push(msgObj);
+
+      return result;
     }
 
-    // Auto-bind WhatsApp JID to participant if missing
-    if (!matchedParticipant.whatsappJid) {
-      matchedParticipant.whatsappJid = matchedSupplier.whatsappJid || fromPhone;
-    }
-
-    // 4. STEP D: Append message under resolved supplier's name in conversation stream
-    const msgObj: ConversationMessage = {
-      id: `msg-in-${Date.now().toString().slice(-6)}`,
-      workflowId: activeMission.id,
-      sender: matchedSupplier.name,
-      senderPhone: matchedSupplier.contactChannel,
-      direction: 'INCOMING',
-      content: messageText,
-      timestamp: timeStr
-    };
-    this.messageStream.push(msgObj);
-
-    // 5. STEP E: Delegate to ProcurementMissionService for state machine execution
-    return ProcurementMissionService.processIncomingWhatsAppEvent(fromPhone, messageText, matchedSupplier, matchedParticipant);
+    // RULE 1: Unknown JID Check — If incoming JID is not in Supplier Master or Customer Master, IGNORE completely!
+    console.log(`ℹ️ [CommunicationService] Ignored unknown WhatsApp message ['${messageText}'] from ${fromPhone}: JID not found in Master Registry.`);
+    return { handled: false, reply: 'Ignored (Unknown JID / Not in Master Registry)' };
   }
 
   /**

@@ -37,6 +37,7 @@ const navGroups: NavGroup[] = [
     category: "Workspaces",
 
     items: [
+      { id: "sales-agent", label: "Sales Workspace", href: "/sales-agent", icon: "ShoppingCart" },
       { id: "pricing-agent", label: "Pricing Workspace", href: "/pricing-agent", icon: "Coins" },
       { id: "revenue-intelligence", label: "Revenue Workspace", href: "/revenue-intelligence", icon: "TrendingUp" },
       { id: "supplier-agent", label: "Supplier Workspace", href: "/supplier-agent", icon: "Truck" },

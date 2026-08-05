@@ -188,19 +188,45 @@ export class CommunicationService {
     const timeStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
     const cleanFrom = fromPhone.replace(/\D/g, '');
 
+    // 1. STEP A: Check Customer Master for Sales Mission Routing FIRST
+    const { CustomerRepository } = await import('../../departments/sales/repositories/CustomerRepository');
+    const { SalesMissionService } = await import('../../departments/sales/services/SalesMissionService');
+    const matchedCustomer = await CustomerRepository.findByJidOrPhone(fromPhone);
+
+    if (matchedCustomer) {
+      const result = await SalesMissionService.processIncomingCustomerWhatsAppEvent(fromPhone, messageText, matchedCustomer);
+
+      const { SalesMissionRepository } = await import('../../departments/sales/repositories/SalesMissionRepository');
+      const salesMissions = await SalesMissionRepository.getAllMissions();
+      const activeSalesMission = salesMissions.find(m => m.customerName.toLowerCase() === matchedCustomer.name.toLowerCase());
+
+      const msgObj: ConversationMessage = {
+        id: `msg-in-sales-${Date.now().toString().slice(-6)}`,
+        workflowId: activeSalesMission?.id || 'SALES-0001',
+        sender: matchedCustomer.name,
+        senderPhone: matchedCustomer.contactChannel,
+        direction: 'INCOMING',
+        content: messageText,
+        timestamp: timeStr
+      };
+      this.messageStream.push(msgObj);
+
+      return result;
+    }
+
+    // 2. STEP B: Check Supplier Master & Procurement Mission Routing
     const { SupplierRepository } = await import('@/departments/procurement/repositories/SupplierRepository');
     const { ProcurementMissionRepository } = await import('@/departments/procurement/repositories/ProcurementMissionRepository');
 
-    // 1. STEP A: Check Active Mission
     const allMissions = await ProcurementMissionRepository.getAllMissions();
     const activeMission = allMissions.find(m => m.status === 'Active' || m.status === 'Paused_Approval');
 
     if (!activeMission) {
-      console.log(`ℹ️ [CommunicationService] Ignored WhatsApp message from ${fromPhone}: No active procurement mission.`);
-      return { handled: false, reply: 'Ignored (No active procurement mission)' };
+      console.log(`ℹ️ [CommunicationService] Ignored WhatsApp message from ${fromPhone}: Sender is not a registered Customer and no active Procurement Mission exists.`);
+      return { handled: false, reply: 'Ignored (No active procurement mission or registered customer)' };
     }
 
-    // RULE 0: Historical Message Filter — Ignore messages received before active mission started or backend started!
+    // Historical Message Filter for Procurement Mission
     if (msgTimestamp) {
       let msgTimeMs = 0;
       if (typeof msgTimestamp === 'number') {
@@ -220,7 +246,6 @@ export class CommunicationService {
       }
     }
 
-    // 2. STEP B: Search Supplier Master by WhatsApp JID (Prioritizing Active Mission Participants)
     const allSuppliers = await SupplierRepository.getAllSuppliers();
     const activeParticipants = (activeMission?.context as any)?.missionParticipants || [];
 
@@ -270,32 +295,6 @@ export class CommunicationService {
 
         return ProcurementMissionService.processIncomingWhatsAppEvent(fromPhone, messageText, matchedSupplier, matchedParticipant);
       }
-    }
-
-    // 3. STEP C: Check Customer Master for Sales Mission Routing
-    const { CustomerRepository } = await import('../../departments/sales/repositories/CustomerRepository');
-    const { SalesMissionService } = await import('../../departments/sales/services/SalesMissionService');
-    const matchedCustomer = await CustomerRepository.findByJidOrPhone(fromPhone);
-
-    if (matchedCustomer) {
-      const result = await SalesMissionService.processIncomingCustomerWhatsAppEvent(fromPhone, messageText, matchedCustomer);
-
-      const { SalesMissionRepository } = await import('../../departments/sales/repositories/SalesMissionRepository');
-      const salesMissions = await SalesMissionRepository.getAllMissions();
-      const activeSalesMission = salesMissions.find(m => m.customerName.toLowerCase() === matchedCustomer.name.toLowerCase());
-
-      const msgObj: ConversationMessage = {
-        id: `msg-in-sales-${Date.now().toString().slice(-6)}`,
-        workflowId: activeSalesMission?.id || 'SALES-0001',
-        sender: matchedCustomer.name,
-        senderPhone: matchedCustomer.contactChannel,
-        direction: 'INCOMING',
-        content: messageText,
-        timestamp: timeStr
-      };
-      this.messageStream.push(msgObj);
-
-      return result;
     }
 
     // RULE 1: Unknown JID Check — If incoming JID is not in Supplier Master or Customer Master, IGNORE completely!

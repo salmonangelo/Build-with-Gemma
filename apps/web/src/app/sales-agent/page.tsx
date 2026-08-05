@@ -409,10 +409,43 @@ export default function SalesAgentPage() {
               className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer"
             >
               <QrCode size={16} />
-              <span>{waConnected ? 'WhatsApp Active' : 'Scan WhatsApp QR'}</span>
+              <span>{connecting ? 'Starting Daemon...' : waConnected ? 'WhatsApp Active (Scan Again)' : 'Scan WhatsApp QR'}</span>
             </button>
           </div>
         </div>
+
+        {/* WHATSAPP QR SCAN MODAL */}
+        {showQrModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+            <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4 relative">
+              <div className="flex justify-between items-center border-b border-[var(--border-subtle)] pb-3">
+                <h3 className="text-sm font-bold font-display text-[var(--text-primary)] flex items-center gap-2">
+                  <QrCode size={16} className="text-emerald-500" />
+                  Scan QR Code with WhatsApp
+                </h3>
+                <button onClick={() => setShowQrModal(false)} className="text-xs text-[var(--text-muted)] hover:text-white font-bold px-2 py-1 bg-[var(--bg-subtle)] rounded-lg">✕</button>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl inline-block shadow-inner">
+                {qrCodeUrl ? (
+                  <img src={qrCodeUrl} alt="WhatsApp QR Code" className="w-64 h-64 mx-auto" />
+                ) : (
+                  <div className="w-64 h-64 flex flex-col items-center justify-center text-gray-500 space-y-2">
+                    <RefreshCw size={24} className="animate-spin text-emerald-600" />
+                    <span className="text-xs font-bold">Generating Fresh QR Code...</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="text-left text-xs text-[var(--text-muted)] space-y-1 bg-[var(--bg-subtle)] p-3 rounded-xl">
+                <p className="font-bold text-[var(--text-primary)]">Instructions:</p>
+                <p>1. Open WhatsApp on your phone</p>
+                <p>2. Tap Settings &gt; Linked Devices &gt; Link a Device</p>
+                <p>3. Point your camera at this QR code</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* =================================================================== */}
         {/* 2. CUSTOMER REGISTRATION FORM (AUTOMATIC WORKFLOW TRIGGER)          */}

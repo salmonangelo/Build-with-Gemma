@@ -1,0 +1,203 @@
+import os
+import sys
+import time
+import json
+import threading
+import requests
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from neonize.client import NewClient
+from neonize.events import ConnectedEv, MessageEv, QREv
+from neonize.utils.jid import JID, build_jid
+
+# Reconfigure stdout/stderr to use utf-8 to prevent encoding crashes on Windows terminal
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
+
+# Global State
+whatsapp_state = {
+    "connected": False,
+    "phone": None,
+    "qr": None
+}
+
+CLIENT_DB_PATH = os.path.join(os.path.dirname(__file__), "whatsapp_session.db")
+client = NewClient(CLIENT_DB_PATH)
+
+def setup_client_events(cl):
+    @cl.event(QREv)
+    def on_qr(_: NewClient, qr_ev: QREv):
+        if qr_ev.Codes:
+            qr_str = qr_ev.Codes[0]
+            whatsapp_state["qr"] = qr_str
+            whatsapp_state["connected"] = False
+            print(f"\n[QR CODE GENERATED] Fresh QR code ready for UI scanning.")
+
+    @cl.event(ConnectedEv)
+    def on_connected(c: NewClient, _: ConnectedEv):
+        whatsapp_state["connected"] = True
+        whatsapp_state["qr"] = None
+        phone_number = "Unknown"
+        try:
+            if hasattr(c, "me") and c.me and hasattr(c.me, "JID") and c.me.JID:
+                phone_number = getattr(c.me.JID, "User", "Unknown")
+        except Exception as e:
+            print(f"[WARN] Could not parse phone number: {e}")
+        
+        whatsapp_state["phone"] = phone_number
+        print(f"\n🟢 [CONNECTED] WhatsApp session active for phone +{phone_number}")
+
+    @cl.event(MessageEv)
+    def on_message(_: NewClient, message: MessageEv):
+        try:
+            msg_body = message.Message
+            if not msg_body:
+                return
+
+            text = None
+            if msg_body.conversation:
+                text = msg_body.conversation
+            elif msg_body.extendedTextMessage and msg_body.extendedTextMessage.text:
+                text = msg_body.extendedTextMessage.text
+
+            if not text:
+                return
+
+            sender_jid = message.Info.MessageSource.Sender.User if message.Info and message.Info.MessageSource and message.Info.MessageSource.Sender else "Unknown"
+            is_from_me = message.Info.MessageSource.IsFromMe if message.Info and message.Info.MessageSource else False
+            chat_jid_obj = message.Info.MessageSource.Chat if message.Info and message.Info.MessageSource else None
+            chat_user = chat_jid_obj.User if chat_jid_obj else sender_jid
+
+            full_jid = f"{chat_user}@s.whatsapp.net"
+
+            payload = {
+                "sender": sender_jid,
+                "chatJid": full_jid,
+                "text": text,
+                "isFromMe": is_from_me,
+                "timestamp": str(message.Info.Timestamp) if message.Info else str(int(time.time()))
+            }
+
+            print(f"\n📩 [INCOMING WA MESSAGE] From: {full_jid} | Text: '{text}'")
+
+            # Forward to Next.js webhook endpoint
+            try:
+                res = requests.post("http://localhost:3000/api/whatsapp/receive", json=payload, timeout=5)
+                print(f"   ↳ Webhook Response: {res.status_code} {res.json() if res.status_code == 200 else res.text}")
+            except Exception as http_err:
+                print(f"   ↳ [WARN] Failed to forward message to Next.js endpoint: {http_err}")
+
+        except Exception as err:
+            print(f"❌ [ERROR] Error handling incoming WhatsApp message: {err}")
+
+class DaemonHTTPHandler(BaseHTTPRequestHandler):
+    def log_message(self, format, *args):
+        # Mute verbose HTTP logging
+        return
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+
+    def do_GET(self):
+        if self.path == "/status":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(json.dumps(whatsapp_state).encode("utf-8"))
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def do_POST(self):
+        if self.path == "/send":
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                data = json.loads(post_data.decode("utf-8"))
+                target_jid = data.get("jid") or data.get("to")
+                message_text = data.get("message")
+
+                if not target_jid or not message_text:
+                    self.send_response(400)
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"success": False, "error": "Missing jid or message"}).encode("utf-8"))
+                    return
+
+                # Clean JID format
+                raw_user = target_jid.split("@")[0].replace("+", "").replace(" ", "").replace("-", "")
+                jid_obj = build_jid(raw_user, "s.whatsapp.net")
+
+                client.send_message(jid_obj, message_text)
+                print(f"\n📤 [OUTGOING WA MESSAGE SENT] To: {raw_user}@s.whatsapp.net | Text: '{message_text}'")
+
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": True}).encode("utf-8"))
+            except Exception as err:
+                print(f"❌ [ERROR] Failed to send WhatsApp message: {err}")
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": False, "error": str(err)}).encode("utf-8"))
+        elif self.path in ("/disconnect", "/reset"):
+            try:
+                client.disconnect()
+                whatsapp_state["connected"] = False
+                whatsapp_state["phone"] = None
+                whatsapp_state["qr"] = None
+                
+                # Delete session db file if exists
+                if os.path.exists(CLIENT_DB_PATH):
+                    try:
+                        os.remove(CLIENT_DB_PATH)
+                        print("🗑️ [DISCONNECTED] Deleted local session database file.")
+                    except Exception as del_err:
+                        print(f"[WARN] Could not remove session db: {del_err}")
+
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": True, "status": whatsapp_state}).encode("utf-8"))
+            except Exception as err:
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": False, "error": str(err)}).encode("utf-8"))
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+def run_http_server():
+    server_address = ('', 5001)
+    httpd = HTTPServer(server_address, DaemonHTTPHandler)
+    print("🚀 [DAEMON SERVER] Daemon HTTP API listening on http://localhost:5001")
+    httpd.serve_forever()
+
+if __name__ == "__main__":
+    setup_client_events(client)
+    
+    # Start HTTP API thread
+    http_thread = threading.Thread(target=run_http_server, daemon=True)
+    http_thread.start()
+
+    print("⚡ [WHATSAPP CLIENT] Connecting client to WhatsApp Web...")
+    try:
+        client.connect()
+    except KeyboardInterrupt:
+        print("\n👋 Stopping WhatsApp daemon...")
+        sys.exit(0)
+    except Exception as e:
+        print(f"❌ Connection error: {e}")

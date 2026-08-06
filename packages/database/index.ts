@@ -1,12 +1,23 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+
+const connectionString =
+  process.env.DATABASE_URL ||
+  "postgresql://postgres:salmon%4011@localhost:5432/revenue_intelligence?schema=public";
+
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
 
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    adapter,
+    log: process.env.PRISMA_LOG_QUERY === "true" ? ["query", "error", "warn"] : ["error", "warn"],
   });
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
-export * from '@prisma/client';
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+export * from "@prisma/client";
+

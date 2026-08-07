@@ -72,8 +72,10 @@ def setup_client_events(cl):
             full_jid = f"{chat_user}@s.whatsapp.net"
 
             payload = {
+                "from": full_jid,
                 "sender": sender_jid,
                 "chatJid": full_jid,
+                "message": text,
                 "text": text,
                 "isFromMe": is_from_me,
                 "timestamp": str(message.Info.Timestamp) if message.Info else str(int(time.time()))

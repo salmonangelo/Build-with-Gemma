@@ -112,14 +112,18 @@ export default function RealWhatsAppSupplierAgentPage() {
           setShowQrModal(false);
           setQrCodeDataUrl(null);
         } else if (data.status.qr) {
-          const qrRes = await fetch('/api/whatsapp/qr', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: data.status.qr })
-          });
-          const qrData = await qrRes.json();
-          if (qrData.success) {
-            setQrCodeDataUrl(qrData.dataUrl);
+          if (data.status.qr.startsWith('http') || data.status.qr.startsWith('data:')) {
+            setQrCodeDataUrl(data.status.qr);
+          } else {
+            const qrRes = await fetch('/api/whatsapp/qr', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: data.status.qr })
+            });
+            const qrData = await qrRes.json();
+            if (qrData.success) {
+              setQrCodeDataUrl(qrData.dataUrl);
+            }
           }
         }
       }

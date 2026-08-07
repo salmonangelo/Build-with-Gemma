@@ -83,7 +83,7 @@ def setup_client_events(cl):
 
             # Forward to Next.js webhook endpoint
             try:
-                res = requests.post("http://localhost:3000/api/whatsapp/receive", json=payload, timeout=5)
+                res = requests.post("http://127.0.0.1:3000/api/whatsapp/receive", json=payload, timeout=5)
                 print(f"   ↳ Webhook Response: {res.status_code} {res.json() if res.status_code == 200 else res.text}")
             except Exception as http_err:
                 print(f"   ↳ [WARN] Failed to forward message to Next.js endpoint: {http_err}")

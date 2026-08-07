@@ -73,7 +73,7 @@ export class CommunicationService {
    */
   static async resetSession(): Promise<GatewayStatus> {
     try {
-      await fetch('http://localhost:5001/reset', { method: 'POST' });
+      await fetch('http://127.0.0.1:5001/reset', { method: 'POST' });
     } catch (e) {
       console.warn('[CommunicationService] resetSession note:', e);
     }
@@ -92,7 +92,7 @@ export class CommunicationService {
    */
   static async getStatus(): Promise<GatewayStatus> {
     try {
-      const res = await fetch('http://localhost:5001/status', { cache: 'no-store' });
+      const res = await fetch('http://127.0.0.1:5001/status', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         let formattedQr = data.qr || null;

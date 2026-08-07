@@ -157,13 +157,14 @@ class DaemonHTTPHandler(BaseHTTPRequestHandler):
                 whatsapp_state["phone"] = None
                 whatsapp_state["qr"] = None
                 
-                # Delete session db file if exists
-                if os.path.exists(CLIENT_DB_PATH):
-                    try:
-                        os.remove(CLIENT_DB_PATH)
-                        print("🗑️ [DISCONNECTED] Deleted local session database file.")
-                    except Exception as del_err:
-                        print(f"[WARN] Could not remove session db: {del_err}")
+                # Delete session db files if exist
+                for fpath in [CLIENT_DB_PATH, CLIENT_DB_PATH + "-wal", CLIENT_DB_PATH + "-shm", CLIENT_DB_PATH + "-journal"]:
+                    if os.path.exists(fpath):
+                        try:
+                            os.remove(fpath)
+                            print(f"🗑️ [DISCONNECTED] Deleted local session database file: {fpath}")
+                        except Exception as del_err:
+                            print(f"[WARN] Could not remove session db {fpath}: {del_err}")
 
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")

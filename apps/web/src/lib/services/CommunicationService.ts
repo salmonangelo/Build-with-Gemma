@@ -68,28 +68,43 @@ export class CommunicationService {
   /**
    * Clears old WhatsApp session database files and forces generation of a fresh QR code.
    */
+  /**
+   * Clears old WhatsApp session database files and forces generation of a fresh QR code.
+   */
   static async resetSession(): Promise<GatewayStatus> {
     try {
       await fetch('http://localhost:5001/reset', { method: 'POST' });
     } catch (e) {
       console.warn('[CommunicationService] resetSession note:', e);
     }
+    if (this.pythonProcess) {
+      try {
+        this.pythonProcess.kill();
+      } catch (e) {}
+      this.pythonProcess = null;
+    }
     this.ensureGatewayRunning();
     return this.getStatus();
   }
 
   /**
-   * Starts Python WhatsApp Gateway if not already running, and retrieves connection status & QR.
+   * Starts Python WhatsApp Gateway if not already running, and retrieves connection status & QR image URL.
    */
   static async getStatus(): Promise<GatewayStatus> {
     try {
       const res = await fetch('http://localhost:5001/status', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
+        let formattedQr = data.qr || null;
+
+        if (formattedQr && !formattedQr.startsWith('data:') && !formattedQr.startsWith('http')) {
+          formattedQr = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(formattedQr)}`;
+        }
+
         return {
           connected: Boolean(data.connected),
           phone: data.phone || null,
-          qr: data.qr || null
+          qr: formattedQr
         };
       }
     } catch (e) {

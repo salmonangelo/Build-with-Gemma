@@ -135,8 +135,17 @@ class DaemonHTTPHandler(BaseHTTPRequestHandler):
                 raw_user = target_jid.split("@")[0].replace("+", "").replace(" ", "").replace("-", "")
                 jid_obj = build_jid(raw_user, "s.whatsapp.net")
 
-                client.send_message(jid_obj, message_text)
-                print(f"\n📤 [OUTGOING WA MESSAGE SENT] To: {raw_user}@s.whatsapp.net | Text: '{message_text}'")
+                def dispatch_msg(target_jid_obj, text_body, attempt=1):
+                    try:
+                        client.send_message(target_jid_obj, text_body)
+                        print(f"\n📤 [OUTGOING WA MESSAGE SENT] To: {raw_user}@s.whatsapp.net | Text: '{text_body}'")
+                    except Exception as send_err:
+                        print(f"⚠️ [OUTGOING WA RETRY] Attempt {attempt} failed: {send_err}")
+                        if attempt <= 3:
+                            time.sleep(3)
+                            dispatch_msg(target_jid_obj, text_body, attempt + 1)
+
+                threading.Thread(target=dispatch_msg, args=(jid_obj, message_text), daemon=True).start()
 
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")

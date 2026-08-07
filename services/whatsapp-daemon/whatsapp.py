@@ -36,17 +36,22 @@ def setup_client_events(cl):
 
     @cl.event(ConnectedEv)
     def on_connected(c: NewClient, _: ConnectedEv):
-        whatsapp_state["connected"] = True
-        whatsapp_state["qr"] = None
         phone_number = "Unknown"
+        is_authenticated = False
         try:
-            if hasattr(c, "me") and c.me and hasattr(c.me, "JID") and c.me.JID:
-                phone_number = getattr(c.me.JID, "User", "Unknown")
+            if hasattr(c, "me") and c.me and hasattr(c.me, "JID") and c.me.JID and c.me.JID.User:
+                phone_number = c.me.JID.User
+                is_authenticated = True
         except Exception as e:
             print(f"[WARN] Could not parse phone number: {e}")
         
-        whatsapp_state["phone"] = phone_number
-        print(f"\n🟢 [CONNECTED] WhatsApp session active for phone +{phone_number}")
+        whatsapp_state["connected"] = is_authenticated
+        whatsapp_state["phone"] = phone_number if is_authenticated else None
+        if is_authenticated:
+            whatsapp_state["qr"] = None
+            print(f"\n🟢 [CONNECTED] WhatsApp session active for phone +{phone_number}")
+        else:
+            print(f"\n⚠️ [WAITING FOR QR SCAN] Socket connected but device JID not bound yet.")
 
     @cl.event(MessageEv)
     def on_message(_: NewClient, message: MessageEv):
@@ -145,6 +150,11 @@ class DaemonHTTPHandler(BaseHTTPRequestHandler):
                         client.send_message(target_jid_obj, text_body)
                         print(f"\n📤 [OUTGOING WA MESSAGE SENT] To: {raw_user}@s.whatsapp.net | Text: '{text_body}'")
                     except Exception as send_err:
+                        err_str = str(send_err)
+                        if "doesn't contain a device JID" in err_str or "not logged in" in err_str.lower():
+                            whatsapp_state["connected"] = False
+                            print(f"❌ [OUTGOING WA ERROR] WhatsApp account is not linked yet ({err_str}). Please scan QR Code in Web UI!")
+                            return
                         print(f"⚠️ [OUTGOING WA RETRY] Attempt {attempt} failed: {send_err}")
                         if attempt <= 3:
                             time.sleep(3)

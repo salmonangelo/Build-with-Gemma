@@ -167,7 +167,7 @@ export class CommunicationService {
 
     // 2. Dispatch to Python Gateway REST API
     try {
-      const res = await fetch('http://localhost:5001/send', {
+      const res = await fetch('http://127.0.0.1:5001/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ to: recipient, message })

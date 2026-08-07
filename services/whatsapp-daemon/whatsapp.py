@@ -131,8 +131,11 @@ class DaemonHTTPHandler(BaseHTTPRequestHandler):
                     self.wfile.write(json.dumps({"success": False, "error": "Missing jid or message"}).encode("utf-8"))
                     return
 
-                # Clean JID format
-                raw_user = target_jid.split("@")[0].replace("+", "").replace(" ", "").replace("-", "")
+                # Clean JID format & ensure 10-digit numbers get 91 country code prefix
+                raw_user = target_jid.split("@")[0].replace("+", "").replace(" ", "").replace("-", "").strip()
+                if len(raw_user) == 10 and raw_user.isdigit():
+                    raw_user = "91" + raw_user
+
                 jid_obj = build_jid(raw_user, "s.whatsapp.net")
 
                 def dispatch_msg(target_jid_obj, text_body, attempt=1):

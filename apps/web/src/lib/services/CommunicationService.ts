@@ -126,6 +126,7 @@ export class CommunicationService {
 
     try {
       this.pythonProcess = spawn('python', [scriptPath], {
+        cwd: path.dirname(scriptPath),
         stdio: 'inherit',
         detached: false
       });

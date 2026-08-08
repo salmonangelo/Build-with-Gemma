@@ -36,22 +36,22 @@ def setup_client_events(cl):
 
     @cl.event(ConnectedEv)
     def on_connected(c: NewClient, _: ConnectedEv):
-        phone_number = "Unknown"
-        is_authenticated = False
+        whatsapp_state["connected"] = True
+        whatsapp_state["qr"] = None
+        phone_number = "Active"
         try:
-            if hasattr(c, "me") and c.me and hasattr(c.me, "JID") and c.me.JID and c.me.JID.User:
-                phone_number = c.me.JID.User
-                is_authenticated = True
+            if hasattr(c, "me") and c.me:
+                if hasattr(c.me, "JID") and c.me.JID and hasattr(c.me.JID, "User") and c.me.JID.User:
+                    phone_number = c.me.JID.User
+                elif hasattr(c.me, "User") and c.me.User:
+                    phone_number = c.me.User
+            elif hasattr(c, "store") and c.store and hasattr(c.store, "ID") and c.store.ID:
+                phone_number = getattr(c.store.ID, "User", "Active")
         except Exception as e:
             print(f"[WARN] Could not parse phone number: {e}")
         
-        whatsapp_state["connected"] = is_authenticated
-        whatsapp_state["phone"] = phone_number if is_authenticated else None
-        if is_authenticated:
-            whatsapp_state["qr"] = None
-            print(f"\n🟢 [CONNECTED] WhatsApp session active for phone +{phone_number}")
-        else:
-            print(f"\n⚠️ [WAITING FOR QR SCAN] Socket connected but device JID not bound yet.")
+        whatsapp_state["phone"] = phone_number
+        print(f"\n🟢 [CONNECTED] WhatsApp session active for phone +{phone_number}")
 
     @cl.event(MessageEv)
     def on_message(_: NewClient, message: MessageEv):

@@ -112,6 +112,18 @@ class DaemonHTTPHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/status":
+            try:
+                if (hasattr(client, "is_logged_in") and client.is_logged_in) or (hasattr(client, "is_connected") and client.is_connected):
+                    whatsapp_state["connected"] = True
+                    whatsapp_state["qr"] = None
+                    if not whatsapp_state["phone"] or whatsapp_state["phone"] == "Unknown":
+                        if hasattr(client, "me") and client.me and hasattr(client.me, "JID") and client.me.JID:
+                            whatsapp_state["phone"] = client.me.JID.User
+                        else:
+                            whatsapp_state["phone"] = "Active"
+            except Exception as st_err:
+                print(f"[WARN] Error inspecting client status in do_GET: {st_err}")
+
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")

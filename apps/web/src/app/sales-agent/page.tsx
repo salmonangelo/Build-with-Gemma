@@ -116,9 +116,14 @@ export default function SalesAgentPage() {
     try {
       const res = await fetch('/api/whatsapp/status');
       const data = await res.json();
-      setWaConnected(Boolean(data.connected));
-      if (data.qrCode) {
-        setQrCodeUrl(data.qrCode);
+      if (data.success && data.status) {
+        setWaConnected(Boolean(data.status.connected));
+        if (data.status.qr) {
+          setQrCodeUrl(data.status.qr);
+        } else if (data.status.connected) {
+          setQrCodeUrl(null);
+          setShowQrModal(false);
+        }
       }
     } catch (e) {
       console.warn('[Fetch WA Status error]:', e);
